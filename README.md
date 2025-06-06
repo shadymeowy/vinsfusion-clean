@@ -1,4 +1,36 @@
 # VINS-Fusion
+
+This repository contains a cleaned up version of the VINS-Fusion project.
+
+## Building
+
+To get started, first build the Docker image using the provided `Dockerfile`. Navigate to the directory containing the `Dockerfile` and run the following command:
+
+```bash
+docker build -t ros:vins-fusion -f ./Dockerfile ..
+```
+
+This command builds a Docker image named `ros:vins-fusion` that includes all necessary dependencies for VINS-Fusion.
+
+Once the Docker image is built, you'll need to build the Catkin workspace. Execute the following commands in your terminal:
+
+```bash
+catkin config \
+    --env-cache \
+    --extend /opt/ros/kinetic \
+    --cmake-args \
+    -DCMAKE_BUILD_TYPE=Release
+catkin build
+```
+
+These commands configure your Catkin workspace and then compile the project in `Release` mode for optimized performance.
+After a successful build, you must source the setup file to correctly configure your environment. This allows you to use the VINS-Fusion executables and libraries.
+
+```bash
+source devel/setup.bash
+```
+
+# VINS-Fusion
 ## An optimization-based multi-sensor state estimator
 
 <img src="https://github.com/HKUST-Aerial-Robotics/VINS-Fusion/blob/master/support_files/image/vins_logo.png" width = 55% height = 55% div align=left />

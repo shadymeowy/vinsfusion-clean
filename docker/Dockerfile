@@ -1,46 +1,42 @@
 FROM ros:kinetic-perception
 
-ENV CERES_VERSION="1.12.0"
-ENV CATKIN_WS=/root/catkin_ws
+# Set environment variables
+ENV TERM xterm
+ENV PYTHONIOENCODING UTF-8
 
-      # set up thread number for building
-RUN   if [ "x$(nproc)" = "x1" ] ; then export USE_PROC=1 ; \
-      else export USE_PROC=$(($(nproc)/2)) ; fi && \
-      apt-get update && apt-get install -y \
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+      --allow-unauthenticated \
       cmake \
       libatlas-base-dev \
       libeigen3-dev \
       libgoogle-glog-dev \
       libsuitesparse-dev \
       python-catkin-tools \
-      ros-${ROS_DISTRO}-cv-bridge \
-      ros-${ROS_DISTRO}-image-transport \
-      ros-${ROS_DISTRO}-message-filters \
-      ros-${ROS_DISTRO}-tf && \
-      rm -rf /var/lib/apt/lists/* && \
-      # Build and install Ceres
-      git clone https://ceres-solver.googlesource.com/ceres-solver && \
-      cd ceres-solver && \
-      git checkout tags/${CERES_VERSION} && \
-      mkdir build && cd build && \
-      cmake .. && \
-      make -j$(USE_PROC) install && \
-      rm -rf ../../ceres-solver && \
-      mkdir -p $CATKIN_WS/src/VINS-Fusion/
+      ros-kinetic-rviz \
+      ros-kinetic-cv-bridge \
+      ros-kinetic-image-transport \
+      ros-kinetic-message-filters \
+      ros-kinetic-tf && \
+      rm -rf /var/lib/apt/lists/*
 
-# Copy VINS-Fusion
-COPY ./ $CATKIN_WS/src/VINS-Fusion/
-# use the following line if you only have this dockerfile
-# RUN git clone https://github.com/HKUST-Aerial-Robotics/VINS-Fusion.git
+# Install Ceres
+WORKDIR /
+RUN git clone --depth 1 --branch 1.12.0 https://ceres-solver.googlesource.com/ceres-solver
+WORKDIR /ceres-solver
+RUN mkdir build \
+    && cd build \
+    && cmake ../ \
+    && make -j8 \
+    && make test \
+    && make install
+WORKDIR /
 
-# Build VINS-Fusion
-WORKDIR $CATKIN_WS
-ENV TERM xterm
-ENV PYTHONIOENCODING UTF-8
-RUN catkin config \
-      --extend /opt/ros/$ROS_DISTRO \
-      --cmake-args \
-        -DCMAKE_BUILD_TYPE=Release && \
-    catkin build && \
-    sed -i '/exec "$@"/i \
-            source "/root/catkin_ws/devel/setup.bash"' /ros_entrypoint.sh
+# Set workspace
+RUN mkdir -p /root/catkin_ws
+WORKDIR /root/catkin_ws
+
+# Install helper tools
+RUN apt-get update && \
+    apt-get install -y tmux && \
+    rm -rf /var/lib/apt/lists/*
