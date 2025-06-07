@@ -82,3 +82,13 @@ RUN update-alternatives --install \
     /usr/bin/clang-tidy \
     clang-tidy \
     /usr/bin/clang-tidy-18 100
+
+RUN update-alternatives --install \
+    /usr/bin/run-clang-tidy \
+    run-clang-tidy \
+    /usr/bin/run-clang-tidy-18 100
+
+RUN update-alternatives --install \
+    /usr/bin/clang-apply-replacements \
+    clang-apply-replacements \
+    /usr/bin/clang-apply-replacements-18 100

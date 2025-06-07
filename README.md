@@ -20,6 +20,7 @@ catkin config \
     --env-cache \
     --extend /opt/ros/noetic \
     --cmake-args \
+    -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
     -DCMAKE_BUILD_TYPE=Release
 ```
 
@@ -51,18 +52,20 @@ To format all the files in project, use the following command:
 find . -type f \( -name "*.c" -o -name "*.cpp" -o -name "*.h" \) -exec clang-format -i {} +
 ```
 
-To run `clang-tidy` on all files, we use provided Python script `run_clang_tidy` by LLVM team.
-This script will automatically find all C++ files in the project and run `clang-tidy` on them.
+While formatting is quite fast, linting can take a bit longer.
+You can run `clang-tidy` on a specific file by providing the file path as an argument:
 
 ```bash
-run_clang_tidy -p . --clang-tidy-binary /usr/bin/clang-tidy
+clang-tidy -p /root/catkin_ws/build/vins/ --header-filter /root/catkin_ws/src/VINS-Fusion/src/feature_tracker.h /catkin_ws/src/VINS-Fusion/src/feature_tracker.cpp
 ```
 
-While formatting is quite fast, linting can take a bit longer.
-You can also run `clang-tidy` on a specific file by providing the file path as an argument:
+It is also possible to run `clang-tidy` on all files in the project using the following commands:
 
 ```bash
-clang-tidy -p . /usr/bin/clang-tidy path/to/your/file.cpp
+run-clang-tidy -config-file /root/catkin_ws/src/VINS-Fusion/.clang-tidy -p /root/catkin_ws/build/vins/ -header-filter='.*' -fix
+run-clang-tidy -config-file /root/catkin_ws/src/VINS-Fusion/.clang-tidy -p /root/catkin_ws/build/global_fusion/ -header-filter='.*' -fix
+run-clang-tidy -config-file /root/catkin_ws/src/VINS-Fusion/.clang-tidy -p /root/catkin_ws/build/loop_fusion/ -header-filter='.*' -fix
+run-clang-tidy -config-file /root/catkin_ws/src/VINS-Fusion/.clang-tidy -p /root/catkin_ws/build/camera_models/ -header-filter='.*' -fix
 ```
 
 # VINS-Fusion
