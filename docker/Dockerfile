@@ -64,3 +64,21 @@ WORKDIR /root/catkin_ws
 RUN apt-get update && \
     apt-get install -y tmux && \
     rm -rf /var/lib/apt/lists/*
+
+# Install format and lint tools
+RUN apt-get update && \
+    apt-get install -y \
+      clang-format-18 \
+      clang-tidy-18 && \
+      rm -rf /var/lib/apt/lists/*
+
+# Set clang-format and clang-tidy alternatives
+RUN update-alternatives --install \
+    /usr/bin/clang-format \
+    clang-format \
+    /usr/bin/clang-format-18 100
+
+RUN update-alternatives --install \
+    /usr/bin/clang-tidy \
+    clang-tidy \
+    /usr/bin/clang-tidy-18 100
