@@ -1,7 +1,7 @@
 #!/bin/bash
 
 xhost +local:root
-mkdir -p ws/src
+mkdir -p $HOME/.ws/vinsfusion
 docker run \
     -it \
     --rm \
@@ -13,7 +13,7 @@ docker run \
     --device=/dev/video0 \
     -v $HOME/.ws/vinsfusion/:/root/catkin_ws/ \
     -v $(pwd)/:/root/catkin_ws/src/VINS-Fusion/ \
-    -v /run/media/tdemirdal/tb/:/datasets/ \
+    -v /home/shady/Others/:/datasets/ \
     ros:vins-fusion \
     /bin/bash -c \
     "cd /root/catkin_ws/; source devel/setup.bash; bash"
