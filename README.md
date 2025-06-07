@@ -17,7 +17,7 @@ Once the Docker image is built, you'll need to build the Catkin workspace. Execu
 ```bash
 catkin config \
     --env-cache \
-    --extend /opt/ros/kinetic \
+    --extend /opt/ros/noetic \
     --cmake-args \
     -DCMAKE_BUILD_TYPE=Release
 catkin build
