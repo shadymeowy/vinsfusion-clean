@@ -1,6 +1,7 @@
-# VINS-Fusion
+# vinsfusion-clean
 
-This repository contains a cleaned up version of the VINS-Fusion project.
+This repository contains a cleaned up and properly containerized version of the VINS-Fusion project.
+It is designed to be developed, built, and run within a Docker container. Unless otherwise specified, all commands may be run from within the Docker container.
 
 ## Building
 
@@ -20,6 +21,11 @@ catkin config \
     --extend /opt/ros/noetic \
     --cmake-args \
     -DCMAKE_BUILD_TYPE=Release
+```
+
+Then you can build the Catkin workspace with:
+
+```bash
 catkin build
 ```
 
@@ -28,6 +34,35 @@ After a successful build, you must source the setup file to correctly configure 
 
 ```bash
 source devel/setup.bash
+```
+
+## Formatting and Linting
+To ensure code quality and consistency, this project uses `clang-format` for formatting and `clang-tidy` for linting.
+
+Before running these tools, make sure you have in the correct directory where the config files are located:
+
+```bash
+cd /root/catkin_ws/src/VINS-Fusion/
+```
+
+To format all the files in project, use the following command:
+
+```bash
+find . -type f \( -name "*.c" -o -name "*.cpp" -o -name "*.h" \) -exec clang-format -i {} +
+```
+
+To run `clang-tidy` on all files, we use provided Python script `run_clang_tidy` by LLVM team.
+This script will automatically find all C++ files in the project and run `clang-tidy` on them.
+
+```bash
+run_clang_tidy -p . --clang-tidy-binary /usr/bin/clang-tidy
+```
+
+While formatting is quite fast, linting can take a bit longer.
+You can also run `clang-tidy` on a specific file by providing the file path as an argument:
+
+```bash
+clang-tidy -p . /usr/bin/clang-tidy path/to/your/file.cpp
 ```
 
 # VINS-Fusion
