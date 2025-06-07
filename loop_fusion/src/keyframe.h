@@ -38,6 +38,7 @@ class BriefExtractor {
                           vector<BRIEF::bitset> &descriptors) const;
   BriefExtractor(const std::string &pattern_file);
 
+ private:
   DVision::BRIEF m_brief;
 };
 
