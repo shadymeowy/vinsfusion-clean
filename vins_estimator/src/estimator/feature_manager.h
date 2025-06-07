@@ -39,6 +39,7 @@ class FeaturePerFrame {
     cur_td = td;
     is_stereo = false;
   }
+
   void rightObservation(const Eigen::Matrix<double, 7, 1> &_point) {
     pointRight.x() = _point(0);
     pointRight.y() = _point(1);
@@ -49,6 +50,7 @@ class FeaturePerFrame {
     velocityRight.y() = _point(6);
     is_stereo = true;
   }
+
   double cur_td;
   Vector3d point, pointRight;
   Vector2d uv, uvRight;
@@ -58,13 +60,6 @@ class FeaturePerFrame {
 
 class FeaturePerId {
  public:
-  const int feature_id;
-  int start_frame;
-  vector<FeaturePerFrame> feature_per_frame;
-  int used_num;
-  double estimated_depth;
-  int solve_flag;  // 0 haven't solve yet; 1 solve succ; 2 solve fail;
-
   FeaturePerId(int _feature_id, int _start_frame)
       : feature_id(_feature_id),
         start_frame(_start_frame),
@@ -73,6 +68,13 @@ class FeaturePerId {
         solve_flag(0) {}
 
   int endFrame();
+
+  const int feature_id;
+  int start_frame;
+  vector<FeaturePerFrame> feature_per_frame;
+  int used_num;
+  double estimated_depth;
+  int solve_flag;  // 0 haven't solve yet; 1 solve succ; 2 solve fail;
 };
 
 class FeatureManager {
@@ -108,13 +110,14 @@ class FeatureManager {
   void removeBack();
   void removeFront(int frame_count);
   void removeOutlier(set<int> &outlierIndex);
+
   list<FeaturePerId> feature;
   int last_track_num;
+
+ private:
   double last_average_parallax;
   int new_feature_num;
   int long_track_num;
-
- private:
   double compensatedParallax2(const FeaturePerId &it_per_id, int frame_count);
   const Matrix3d *Rs;
   Matrix3d ric[2];
