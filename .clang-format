@@ -1,0 +1,11 @@
+# Use the Google style in this project.
+BasedOnStyle: Google
+
+# Prefer right alignment for pointers and reference qualifiers.
+DerivePointerAlignment: false
+PointerAlignment: Right
+
+# In this project we use "const east".
+QualifierAlignment: Left
+
+CommentPragmas: '(@copydoc|@copybrief|@see|@overload|@snippet)'
