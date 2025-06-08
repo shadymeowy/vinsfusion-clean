@@ -66,7 +66,7 @@ class GeneralScoring {
      * @param norm (out) if true, norm to use                                \
      * @return true iff vectors must be normalized                           \
      */                                                                      \
-    virtual inline bool mustNormalize(LNorm &norm) const {                   \
+    virtual inline bool mustNormalize(LNorm & norm) const {                  \
       norm = NORM;                                                           \
       return MUSTNORMALIZE;                                                  \
     }                                                                        \
