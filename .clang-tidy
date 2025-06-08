@@ -72,7 +72,10 @@
 #     Despite what the documentation says, this warning appears after
 #     `ASSERT_TRUE(variable)` or `ASSERT_TRUE(variable.has_value())`.
 # 
-#  -readability-identifier-name: Disable for now, we will enable it  
+#  -bugprone-reserved-identifier: code uses underscore-prefixed identifiers
+#     in some places, we will enable it after we fix those.
+# 
+#  -readability-identifier-name: disable for now, we will enable it.
 
 Checks: >
   -*,
@@ -116,6 +119,7 @@ Checks: >
   -bugprone-unused-local-non-trivial-variable,
   -bugprone-unused-return-value,
   -bugprone-integer-division
+  -bugprone-reserved-identifier
   -google-readability-todo
 
 # Turn all the warnings from the checks above into errors.
