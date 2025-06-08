@@ -49,7 +49,7 @@ cd /root/catkin_ws/src/VINS-Fusion/
 To format all the files in project, use the following command:
 
 ```bash
-find . -type f \( -name "*.c" -o -name "*.cpp" -o -name "*.h" \) -exec clang-format -i {} +
+find . -type f \( -name "*.c" -o -name "*.cpp" -o -name "*.h" -o -name "*.cc" \) -exec clang-format -i {} +
 ```
 
 While formatting is quite fast, linting can take a bit longer.
