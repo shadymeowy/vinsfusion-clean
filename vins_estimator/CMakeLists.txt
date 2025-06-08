@@ -2,9 +2,9 @@ cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 project(vins)
 
 set(CMAKE_BUILD_TYPE "Release")
-set(CMAKE_CXX_FLAGS "-std=c++11 -Werror -Wshadow")
+set(CMAKE_CXX_FLAGS "-std=c++11 -Werror")
 #-DEIGEN_USE_MKL_ALL")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -g -Werror -Wshadow")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -g -Werror")
 
 find_package(catkin REQUIRED COMPONENTS
     roscpp

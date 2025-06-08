@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 project(camera_models)
 
 set(CMAKE_BUILD_TYPE "Release")
-set(CMAKE_CXX_FLAGS "-std=c++11 -Werror -Wshadow")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fPIC -Werror -Wshadow")
+set(CMAKE_CXX_FLAGS "-std=c++11 -Werror")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fPIC -Werror")
 
 find_package(catkin REQUIRED COMPONENTS
     roscpp
