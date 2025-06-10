@@ -12,6 +12,8 @@
 
 #include "globalOpt.h"
 
+#include <ros/ros.h>
+
 #include "Factors.h"
 
 GlobalOptimization::GlobalOptimization() {
@@ -21,7 +23,11 @@ GlobalOptimization::GlobalOptimization() {
   threadOpt = std::thread(&GlobalOptimization::optimize, this);
 }
 
-GlobalOptimization::~GlobalOptimization() { threadOpt.detach(); }
+GlobalOptimization::~GlobalOptimization() {
+  if (threadOpt.joinable()) {
+    threadOpt.join();
+  }
+}
 
 void GlobalOptimization::GPS2XYZ(double latitude, double longitude,
                                  double altitude, double *xyz) {
@@ -84,7 +90,7 @@ void GlobalOptimization::inputGPS(double t, double latitude, double longitude,
 }
 
 void GlobalOptimization::optimize() {
-  while (true) {
+  while (ros::ok()) {
     if (newGPS) {
       newGPS = false;
       printf("global optimization\n");
