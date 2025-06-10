@@ -37,6 +37,18 @@ After a successful build, you must source the setup file to correctly configure 
 source devel/setup.bash
 ```
 
+## Running
+To run the VINS-Fusion node, you can use the following command:
+
+```bash
+roslaunch vins vins.launch bag_path:=/your/path/to/bagfile.bag config_path:=/your/path/to/config.yaml
+```
+
+For example,
+```bash
+roslaunch vins vins.launch bag_path:=/bagfiles/MH_01_easy.bag config_path:=/root/catkin_ws/src/VINS-Fusion/config/euroc/euroc_mono_imu_config.yaml
+```
+
 ## Formatting and Linting
 To ensure code quality and consistency, this project uses `clang-format` for formatting and `clang-tidy` for linting.
 
