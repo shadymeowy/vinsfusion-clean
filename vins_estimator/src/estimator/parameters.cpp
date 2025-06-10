@@ -37,7 +37,6 @@ int NUM_OF_CAM;
 int STEREO;
 int USE_IMU;
 int MULTIPLE_THREAD;
-map<int, Eigen::Vector3d> pts_gt;
 std::string IMAGE0_TOPIC, IMAGE1_TOPIC;
 std::string FISHEYE_MASK;
 std::vector<std::string> CAM_NAMES;
@@ -46,18 +45,6 @@ int MIN_DIST;
 double F_THRESHOLD;
 int SHOW_TRACK;
 int FLOW_BACK;
-
-template <typename T>
-T readParam(ros::NodeHandle &n, std::string name) {
-  T ans;
-  if (n.getParam(name, ans)) {
-    ROS_INFO_STREAM("Loaded " << name << ": " << ans);
-  } else {
-    ROS_ERROR_STREAM("Failed to load " << name);
-    n.shutdown();
-  }
-  return ans;
-}
 
 void readParameters(std::string config_file) {
   FILE *fh = fopen(config_file.c_str(), "r");

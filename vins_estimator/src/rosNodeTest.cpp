@@ -139,13 +139,13 @@ void feature_callback(const sensor_msgs::PointCloudConstPtr &feature_msg) {
     double p_v = feature_msg->channels[3].values[i];
     double velocity_x = feature_msg->channels[4].values[i];
     double velocity_y = feature_msg->channels[5].values[i];
-    if (feature_msg->channels.size() > 5) {
-      double gx = feature_msg->channels[6].values[i];
-      double gy = feature_msg->channels[7].values[i];
-      double gz = feature_msg->channels[8].values[i];
-      pts_gt[feature_id] = Eigen::Vector3d(gx, gy, gz);
-      // printf("receive pts gt %d %f %f %f\n", feature_id, gx, gy, gz);
-    }
+    // if (feature_msg->channels.size() > 5) {
+    //   double gx = feature_msg->channels[6].values[i];
+    //   double gy = feature_msg->channels[7].values[i];
+    //   double gz = feature_msg->channels[8].values[i];
+    //   // pts_gt[feature_id] = Eigen::Vector3d(gx, gy, gz);
+    //   // printf("receive pts gt %d %f %f %f\n", feature_id, gx, gy, gz);
+    // }
     ROS_ASSERT(z == 1);
     Eigen::Matrix<double, 7, 1> xyz_uv_velocity;
     xyz_uv_velocity << x, y, z, p_u, p_v, velocity_x, velocity_y;
