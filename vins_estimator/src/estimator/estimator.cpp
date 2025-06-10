@@ -20,7 +20,12 @@ Estimator::Estimator() : f_manager{Rs} {
 
 Estimator::~Estimator() {
   if (MULTIPLE_THREAD) {
-    processThread.join();
+    if (processThread.joinable()) {
+      processThread.join();
+    }
+    if (trackThread.joinable()) {
+      trackThread.join();
+    }
     printf("join thread \n");
   }
 }
@@ -238,7 +243,7 @@ bool Estimator::IMUAvailable(double t) {
 }
 
 void Estimator::processMeasurements() {
-  while (1) {
+  while (ros::ok()) {
     // printf("process measurments\n");
     pair<double, map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>>>
         feature;
@@ -246,7 +251,7 @@ void Estimator::processMeasurements() {
     if (!featureBuf.empty()) {
       feature = featureBuf.front();
       curTime = feature.first + td;
-      while (1) {
+      while (ros::ok()) {
         if ((!USE_IMU || IMUAvailable(feature.first + td)))
           break;
         else {
