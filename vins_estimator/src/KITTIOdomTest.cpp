@@ -42,21 +42,23 @@ int main(int argc, char **argv) {
   ros::Publisher pubRightImage =
       n.advertise<sensor_msgs::Image>("/rightImage", 1000);
 
-  if (argc != 3) {
-    printf(
-        "please intput: rosrun vins kitti_odom_test [config file] [data "
-        "folder] \n"
-        "for example: rosrun vins kitti_odom_test "
-        "~/catkin_ws/src/VINS-Fusion/config/kitti_odom/kitti_config00-02.yaml "
-        "/media/tony-ws1/disk_D/kitti/odometry/sequences/00/ \n");
-    return 1;
+  string config_file;
+  if (n.getParam("config_path", config_file)) {
+    ROS_INFO_STREAM("Successfully loaded config_file: " << config_file);
+  } else {
+    ROS_ERROR_STREAM("Failed to load config_file parameter.");
+    return -1;
   }
+  std::cout << "config_file: " << config_file << std::endl;
 
-  string config_file = argv[1];
-  printf("config_file: %s\n", argv[1]);
-  string sequence = argv[2];
-  printf("read sequence: %s\n", argv[2]);
-  string dataPath = sequence + "/";
+  string dataPath;
+  if (n.getParam("data_path", dataPath)) {
+    ROS_INFO_STREAM("Successfully loaded data_path: " << dataPath);
+  } else {
+    ROS_ERROR_STREAM("Failed to load data_path parameter.");
+    return -1;
+  }
+  std::cout << "dataPath: " << dataPath << std::endl;
 
   readParameters(config_file);
   estimator.setParameter();

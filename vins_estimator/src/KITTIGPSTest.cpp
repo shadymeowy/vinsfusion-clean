@@ -37,28 +37,32 @@ int main(int argc, char **argv) {
 
   pubGPS = n.advertise<sensor_msgs::NavSatFix>("/gps", 1000);
 
-  if (argc != 3) {
-    printf(
-        "please intput: rosrun vins kitti_gps_test [config file] [data folder] "
-        "\n"
-        "for example: rosrun vins kitti_gps_test "
-        "~/catkin_ws/src/VINS-Fusion/config/kitti_raw/kitti_10_03_config.yaml "
-        "/media/tony-ws1/disk_D/kitti/2011_10_03/2011_10_03_drive_0027_sync/ "
-        "\n");
-    return 1;
+  string config_file;
+  if (n.getParam("config_path", config_file)) {
+    ROS_INFO_STREAM("Successfully loaded config_file: " << config_file);
+  } else {
+    ROS_ERROR_STREAM("Failed to load config_file parameter.");
+    return -1;
   }
+  std::cout << "config_file: " << config_file << std::endl;
 
-  string config_file = argv[1];
-  printf("config_file: %s\n", argv[1]);
-  string sequence = argv[2];
-  printf("read sequence: %s\n", argv[2]);
-  string dataPath = sequence + "/";
+  string data_path;
+  if (n.getParam("data_path", data_path)) {
+    ROS_INFO_STREAM("Successfully loaded data_path: " << data_path);
+  } else {
+    ROS_ERROR_STREAM("Failed to load data_path parameter.");
+    return -1;
+  }
+  if (data_path.back() != '/') {
+    data_path += '/';
+  }
+  std::cout << "data_path: " << data_path << std::endl;
 
   // load image list
   FILE *file;
-  file = std::fopen((dataPath + "image_00/timestamps.txt").c_str(), "r");
+  file = std::fopen((data_path + "image_00/timestamps.txt").c_str(), "r");
   if (file == NULL) {
-    printf("cannot find file: %simage_00/timestamps.txt \n", dataPath.c_str());
+    printf("cannot find file: %simage_00/timestamps.txt \n", data_path.c_str());
     ROS_BREAK();
     return 0;
   }
@@ -77,9 +81,9 @@ int main(int argc, char **argv) {
   vector<double> GPSTimeList;
   {
     FILE *file;
-    file = std::fopen((dataPath + "oxts/timestamps.txt").c_str(), "r");
+    file = std::fopen((data_path + "oxts/timestamps.txt").c_str(), "r");
     if (file == NULL) {
-      printf("cannot find file: %soxts/timestamps.txt \n", dataPath.c_str());
+      printf("cannot find file: %soxts/timestamps.txt \n", data_path.c_str());
       ROS_BREAK();
       return 0;
     }
@@ -117,8 +121,8 @@ int main(int argc, char **argv) {
       printf("process image %d\n", (int)i);
       stringstream ss;
       ss << setfill('0') << setw(10) << i;
-      leftImagePath = dataPath + "image_00/data/" + ss.str() + ".png";
-      rightImagePath = dataPath + "image_01/data/" + ss.str() + ".png";
+      leftImagePath = data_path + "image_00/data/" + ss.str() + ".png";
+      rightImagePath = data_path + "image_01/data/" + ss.str() + ".png";
       printf("%s\n", leftImagePath.c_str());
       printf("%s\n", rightImagePath.c_str());
 
@@ -129,7 +133,7 @@ int main(int argc, char **argv) {
 
       // load gps
       FILE *GPSFile;
-      string GPSFilePath = dataPath + "oxts/data/" + ss.str() + ".txt";
+      string GPSFilePath = data_path + "oxts/data/" + ss.str() + ".txt";
       GPSFile = std::fopen(GPSFilePath.c_str(), "r");
       if (GPSFile == NULL) {
         printf("cannot find file: %s\n", GPSFilePath.c_str());
