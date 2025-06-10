@@ -65,7 +65,7 @@ cv::Mat getImageFromMsg(const sensor_msgs::ImageConstPtr &img_msg) {
 
 // extract images with same timestamp from two topics
 void sync_process() {
-  while (1) {
+  while (ros::ok()) {
     if (STEREO) {
       cv::Mat image0, image1;
       std_msgs::Header header;
@@ -193,17 +193,14 @@ int main(int argc, char **argv) {
   ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME,
                                  ros::console::levels::Info);
 
-  if (argc != 2) {
-    printf(
-        "please intput: rosrun vins vins_node [config file] \n"
-        "for example: rosrun vins vins_node "
-        "~/catkin_ws/src/VINS-Fusion/config/euroc/euroc_stereo_imu_config.yaml "
-        "\n");
-    return 1;
+  string config_file;
+  if (n.getParam("config_path", config_file)) {
+    ROS_INFO_STREAM("Successfully loaded config_file: " << config_file);
+  } else {
+    ROS_ERROR_STREAM("Failed to load config_file parameter.");
+    return -1;
   }
-
-  string config_file = argv[1];
-  printf("config_file: %s\n", argv[1]);
+  std::cout << "config_file: " << config_file << std::endl;
 
   readParameters(config_file);
   estimator.setParameter();
@@ -237,6 +234,10 @@ int main(int argc, char **argv) {
 
   std::thread sync_thread{sync_process};
   ros::spin();
+
+  if (sync_thread.joinable()) {
+    sync_thread.join();
+  }
 
   return 0;
 }
