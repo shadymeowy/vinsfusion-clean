@@ -12,7 +12,7 @@
 
 #include "pose_graph.h"
 
-PoseGraph::PoseGraph() {
+PoseGraph::PoseGraph() : t_optimization() {
   posegraph_visualization = new CameraPoseVisualization(1.0, 0.0, 1.0, 1.0);
   posegraph_visualization->setScale(0.1);
   posegraph_visualization->setLineWidth(0.01);
@@ -29,7 +29,11 @@ PoseGraph::PoseGraph() {
   use_imu = 0;
 }
 
-PoseGraph::~PoseGraph() { t_optimization.detach(); }
+PoseGraph::~PoseGraph() {
+  if (t_optimization.joinable()) {
+    t_optimization.join();
+  }
+}
 
 void PoseGraph::registerPub(ros::NodeHandle &n) {
   pub_pg_path = n.advertise<nav_msgs::Path>("pose_graph_path", 1000);
@@ -388,7 +392,7 @@ void PoseGraph::addKeyFrameIntoVoc(KeyFrame *keyframe) {
 }
 
 void PoseGraph::optimize4DoF() {
-  while (true) {
+  while (ros::ok()) {
     int cur_index = -1;
     int first_looped_index = -1;
     m_optimize_buf.lock();
@@ -558,7 +562,7 @@ void PoseGraph::optimize4DoF() {
 }
 
 void PoseGraph::optimize6DoF() {
-  while (true) {
+  while (ros::ok()) {
     int cur_index = -1;
     int first_looped_index = -1;
     m_optimize_buf.lock();
