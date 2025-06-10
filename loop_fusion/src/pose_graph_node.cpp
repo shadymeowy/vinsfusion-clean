@@ -236,7 +236,7 @@ void extrinsic_callback(const nav_msgs::Odometry::ConstPtr &pose_msg) {
 }
 
 void process() {
-  while (true) {
+  while (ros::ok()) {
     sensor_msgs::ImageConstPtr image_msg = NULL;
     sensor_msgs::PointCloudConstPtr point_msg = NULL;
     nav_msgs::Odometry::ConstPtr pose_msg = NULL;
@@ -359,25 +359,25 @@ void process() {
   }
 }
 
-void command() {
-  while (1) {
-    char c = getchar();
-    if (c == 's') {
-      m_process.lock();
-      posegraph.savePoseGraph();
-      m_process.unlock();
-      printf(
-          "save pose graph finish\nyou can set 'load_previous_pose_graph' to 1 "
-          "in the config file to reuse it next time\n");
-      printf("program shutting down...\n");
-      ros::shutdown();
-    }
-    if (c == 'n') new_sequence();
+// void command() {
+//   while (1) {
+//     char c = getchar();
+//     if (c == 's') {
+//       m_process.lock();
+//       posegraph.savePoseGraph();
+//       m_process.unlock();
+//       printf(
+//           "save pose graph finish\nyou can set 'load_previous_pose_graph' to
+//           1 " "in the config file to reuse it next time\n");
+//       printf("program shutting down...\n");
+//       ros::shutdown();
+//     }
+//     if (c == 'n') new_sequence();
 
-    std::chrono::milliseconds dura(5);
-    std::this_thread::sleep_for(dura);
-  }
-}
+//     std::chrono::milliseconds dura(5);
+//     std::this_thread::sleep_for(dura);
+//   }
+// }
 
 int main(int argc, char **argv) {
   ros::init(argc, argv, "loop_fusion");
@@ -389,17 +389,14 @@ int main(int argc, char **argv) {
   SKIP_CNT = 0;
   SKIP_DIS = 0;
 
-  if (argc != 2) {
-    printf(
-        "please intput: rosrun loop_fusion loop_fusion_node [config file] \n"
-        "for example: rosrun loop_fusion loop_fusion_node "
-        "/home/tony-ws1/catkin_ws/src/VINS-Fusion/config/euroc/"
-        "euroc_stereo_imu_config.yaml \n");
-    return 0;
+  string config_file;
+  if (n.getParam("config_path", config_file)) {
+    ROS_INFO_STREAM("Successfully loaded config_file: " << config_file);
+  } else {
+    ROS_ERROR_STREAM("Failed to load config_file parameter.");
+    return -1;
   }
-
-  string config_file = argv[1];
-  printf("config_file: %s\n", argv[1]);
+  std::cout << "config_file: " << config_file << std::endl;
 
   cv::FileStorage fsSettings(config_file, cv::FileStorage::READ);
   if (!fsSettings.isOpened()) {
@@ -479,12 +476,17 @@ int main(int argc, char **argv) {
   pub_odometry_rect = n.advertise<nav_msgs::Odometry>("odometry_rect", 1000);
 
   std::thread measurement_process;
-  std::thread keyboard_command_process;
-
   measurement_process = std::thread(process);
-  keyboard_command_process = std::thread(command);
+  // std::thread keyboard_command_process;
+  // keyboard_command_process = std::thread(command);
 
   ros::spin();
 
+  if (measurement_process.joinable()) {
+    measurement_process.join();
+  }
+  // if (keyboard_command_process.joinable()) {
+  //   keyboard_command_process.join();
+  // }
   return 0;
 }
