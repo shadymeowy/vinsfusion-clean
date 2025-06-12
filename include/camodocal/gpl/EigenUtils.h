@@ -5,6 +5,7 @@
 #include <ceres/rotation.h>
 
 #include <eigen3/Eigen/Dense>
+#include <iostream>
 
 namespace camodocal {
 
