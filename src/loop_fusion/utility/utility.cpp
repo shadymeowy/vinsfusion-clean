@@ -23,4 +23,4 @@ Eigen::Matrix3d Utility::g2R(const Eigen::Vector3d &g) {
   return R0;
 }
 
-} // namespace vins::loop_fusion
+}  // namespace vins::loop_fusion

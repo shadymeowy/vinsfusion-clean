@@ -30,6 +30,8 @@ using namespace std;
 using namespace camodocal;
 using namespace Eigen;
 
+namespace vins::estimator {
+
 bool inBorder(const cv::Point2f &pt);
 void reduceVector(vector<cv::Point2f> &v, vector<uchar> status);
 void reduceVector(vector<int> &v, vector<uchar> status);
@@ -83,3 +85,5 @@ class FeatureTracker {
   int n_id;
   bool hasPrediction;
 };
+
+} // namespace vins::estimator

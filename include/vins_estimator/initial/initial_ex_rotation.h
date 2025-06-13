@@ -22,6 +22,9 @@ using namespace std;
 using namespace Eigen;
 #include <ros/console.h>
 
+
+namespace vins::estimator {
+
 /* This class help you to calibrate extrinsic rotation between imu and camera
  * when your totally don't konw the extrinsic parameter */
 class InitialEXRotation {
@@ -46,3 +49,5 @@ class InitialEXRotation {
   vector<Matrix3d> Rc_g;
   Matrix3d ric;
 };
+
+} // namespace vins::estimator

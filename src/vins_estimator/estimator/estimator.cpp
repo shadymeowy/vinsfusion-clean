@@ -11,6 +11,8 @@
 #include <vins_estimator/estimator/estimator.h>
 #include <vins_estimator/utility/visualization.h>
 
+namespace vins::estimator {
+
 Estimator::Estimator() : f_manager{Rs} {
   ROS_INFO("init begins");
   initThreadFlag = false;
@@ -1490,3 +1492,5 @@ void Estimator::updateLatestStates() {
   }
   mPropagate.unlock();
 }
+
+} // vins::estimator

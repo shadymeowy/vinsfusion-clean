@@ -20,6 +20,8 @@
 
 #include <Eigen/Dense>
 
+namespace vins::estimator {
+
 class ProjectionTwoFrameTwoCamFactor
     : public ceres::SizedCostFunction<2, 7, 7, 7, 7, 1, 1> {
  public:
@@ -39,3 +41,5 @@ class ProjectionTwoFrameTwoCamFactor
   static Eigen::Matrix2d sqrt_info;
   static double sum_t;
 };
+
+} // namespace vins::estimator

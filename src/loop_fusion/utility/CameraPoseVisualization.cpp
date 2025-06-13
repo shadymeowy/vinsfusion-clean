@@ -341,4 +341,4 @@ Eigen::Matrix3d& R, const cv::Mat &src)
 }
 */
 
-} // namespace vins::loop_fusion
+}  // namespace vins::loop_fusion

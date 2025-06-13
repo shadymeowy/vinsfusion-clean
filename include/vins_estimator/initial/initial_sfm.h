@@ -24,6 +24,8 @@
 using namespace Eigen;
 using namespace std;
 
+namespace vins::estimator {
+
 struct SFMFeature {
   bool state;
   int id;
@@ -82,3 +84,5 @@ class GlobalSFM {
 
   int feature_num;
 };
+
+} // namespace vins::estimator

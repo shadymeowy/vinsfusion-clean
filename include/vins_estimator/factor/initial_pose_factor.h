@@ -20,6 +20,8 @@
 
 #include <Eigen/Dense>
 
+namespace vins::estimator {
+
 class InitialPoseFactor : public ceres::SizedCostFunction<6, 7> {
  public:
   InitialPoseFactor(const Eigen::Vector3d &_P, const Eigen::Quaterniond &_Q) {
@@ -110,3 +112,5 @@ class InitialPoseFactor : public ceres::SizedCostFunction<6, 7> {
   Eigen::Quaterniond init_Q;
   Eigen::Matrix<double, 6, 6> sqrt_info;
 };
+
+} // namespace vins::estimator

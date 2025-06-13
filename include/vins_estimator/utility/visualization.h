@@ -31,6 +31,8 @@
 #include <eigen3/Eigen/Dense>
 #include <fstream>
 
+namespace vins::estimator {
+
 extern ros::Publisher pub_odometry;
 extern ros::Publisher pub_path, pub_pose;
 extern ros::Publisher pub_cloud, pub_map;
@@ -68,3 +70,5 @@ void pubKeyframe(const Estimator &estimator);
 void pubRelocalization(const Estimator &estimator);
 
 void pubCar(const Estimator &estimator, const std_msgs::Header &header);
+
+} // namespace vins::estimator

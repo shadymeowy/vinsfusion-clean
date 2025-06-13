@@ -23,10 +23,10 @@
 #include <queue>
 #include <thread>
 
+using namespace vins::estimator;
+
 Estimator estimator;
 
-queue<sensor_msgs::ImuConstPtr> imu_buf;
-queue<sensor_msgs::PointCloudConstPtr> feature_buf;
 queue<sensor_msgs::ImageConstPtr> img0_buf;
 queue<sensor_msgs::ImageConstPtr> img1_buf;
 std::mutex m_buf;

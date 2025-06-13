@@ -37,6 +37,8 @@
 #include <thread>
 #include <unordered_map>
 
+namespace vins::estimator {
+
 class Estimator {
  public:
   Estimator();
@@ -177,3 +179,5 @@ class Estimator {
   bool initFirstPoseFlag;
   bool initThreadFlag;
 };
+
+} // namespace vins::estimator

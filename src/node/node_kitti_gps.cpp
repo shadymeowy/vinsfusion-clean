@@ -24,6 +24,7 @@
 
 using namespace std;
 using namespace Eigen;
+using namespace vins::estimator;
 
 Estimator estimator;
 ros::Publisher pubGPS;

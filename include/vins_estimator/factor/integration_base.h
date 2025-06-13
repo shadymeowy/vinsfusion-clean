@@ -15,6 +15,8 @@
 #include <vins_estimator/utility/utility.h>
 using namespace Eigen;
 
+namespace vins::estimator {
+
 class IntegrationBase {
  public:
   IntegrationBase() = delete;
@@ -492,3 +494,5 @@ class IntegrationBase {
    turb).transpose() << endl;
     }
     */
+
+} // namespace vins::estimator

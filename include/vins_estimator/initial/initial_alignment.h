@@ -23,6 +23,8 @@
 using namespace Eigen;
 using namespace std;
 
+namespace vins::estimator {
+
 class ImageFrame {
  public:
   ImageFrame() {};
@@ -43,3 +45,5 @@ void solveGyroscopeBias(map<double, ImageFrame> &all_image_frame,
                         Vector3d *Bgs);
 bool VisualIMUAlignment(map<double, ImageFrame> &all_image_frame, Vector3d *Bgs,
                         Vector3d &g, VectorXd &x);
+
+} // namespace vins::estimator

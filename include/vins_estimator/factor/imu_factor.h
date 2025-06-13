@@ -18,6 +18,8 @@
 #include <eigen3/Eigen/Dense>
 #include <iostream>
 
+namespace vins::estimator {
+
 class IMUFactor : public ceres::SizedCostFunction<15, 7, 9, 7, 9> {
  public:
   IMUFactor() = delete;
@@ -226,3 +228,5 @@ class IMUFactor : public ceres::SizedCostFunction<15, 7, 9, 7, 9> {
   // void checkJacobian(double **parameters);
   IntegrationBase *pre_integration;
 };
+
+} // namespace vins::estimator

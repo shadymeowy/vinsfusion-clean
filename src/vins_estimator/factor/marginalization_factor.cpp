@@ -10,6 +10,8 @@
 
 #include <vins_estimator/factor/marginalization_factor.h>
 
+namespace vins::estimator {
+
 void ResidualBlockInfo::Evaluate() {
   residuals.resize(cost_function->num_residuals());
 
@@ -418,3 +420,5 @@ bool MarginalizationFactor::Evaluate(const double *const *parameters,
   }
   return true;
 }
+
+} // namespace vins::estimator

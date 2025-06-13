@@ -12,6 +12,8 @@
 
 #include <vins_estimator/initial/initial_sfm.h>
 
+namespace vins::estimator {
+
 GlobalSFM::GlobalSFM() {}
 
 void GlobalSFM::triangulatePoint(Eigen::Matrix<double, 3, 4> &Pose0,
@@ -296,3 +298,5 @@ bool GlobalSFM::construct(int frame_num, Quaterniond *q, Vector3d *T, int l,
   }
   return true;
 }
+
+} // namespace vins::estimator

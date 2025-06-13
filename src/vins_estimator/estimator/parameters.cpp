@@ -10,6 +10,8 @@
 
 #include <vins_estimator/estimator/parameters.h>
 
+namespace vins::estimator {
+
 double INIT_DEPTH;
 double MIN_PARALLAX;
 double ACC_N, ACC_W;
@@ -171,3 +173,5 @@ void readParameters(std::string config_file) {
 
   fsSettings.release();
 }
+
+}  // namespace vins::estimator

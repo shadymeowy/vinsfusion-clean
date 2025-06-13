@@ -10,6 +10,8 @@
 
 #include <vins_estimator/utility/CameraPoseVisualization.h>
 
+namespace vins::estimator {
+
 const Eigen::Vector3d CameraPoseVisualization::imlt =
     Eigen::Vector3d(-1.0, -0.5, 1.0);
 const Eigen::Vector3d CameraPoseVisualization::imrt =
@@ -215,3 +217,5 @@ void CameraPoseVisualization::publish_by(ros::Publisher &pub,
 
   pub.publish(markerArray_msg);
 }
+
+} // namespace vins::estimator

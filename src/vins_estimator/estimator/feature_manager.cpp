@@ -10,6 +10,8 @@
 
 #include <vins_estimator/estimator/feature_manager.h>
 
+namespace vins::estimator {
+
 int FeaturePerId::endFrame() {
   return start_frame + feature_per_frame.size() - 1;
 }
@@ -512,3 +514,5 @@ double FeatureManager::compensatedParallax2(const FeaturePerId &it_per_id,
 
   return ans;
 }
+
+}  // namespace vins::estimator

@@ -18,6 +18,8 @@
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 
+namespace vins::estimator {
+
 class CameraPoseVisualization {
  public:
   std::string m_marker_ns;
@@ -52,3 +54,5 @@ class CameraPoseVisualization {
   static const Eigen::Vector3d lt1;
   static const Eigen::Vector3d lt2;
 };
+
+} // namespace vins::estimator

@@ -35,10 +35,9 @@
 #include <thread>
 #include <vector>
 #define SKIP_FIRST_CNT 10
-using namespace std;
 
-// TODO: remove this namespace declaration from the node
-namespace vins::loop_fusion {
+using namespace std;
+using namespace vins::loop_fusion;
 
 queue<sensor_msgs::ImageConstPtr> image_buf;
 queue<sensor_msgs::PointCloudConstPtr> point_buf;
@@ -479,7 +478,3 @@ int main(int argc, char **argv) {
   // }
   return 0;
 }
-
-}  // namespace vins::loop_fusion
-
-int main(int argc, char **argv) { return vins::loop_fusion::main(argc, argv); }

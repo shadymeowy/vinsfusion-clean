@@ -25,6 +25,8 @@ using namespace Eigen;
 #include <vins_estimator/estimator/parameters.h>
 #include <vins_estimator/utility/tic_toc.h>
 
+namespace vins::estimator {
+
 class FeaturePerFrame {
  public:
   FeaturePerFrame(const Eigen::Matrix<double, 7, 1> &_point, double td) {
@@ -121,5 +123,7 @@ class FeatureManager {
   const Matrix3d *Rs;
   Matrix3d ric[2];
 };
+
+}  // namespace vins::estimator
 
 #endif

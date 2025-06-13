@@ -20,6 +20,8 @@
 
 #include <Eigen/Dense>
 
+namespace vins::estimator {
+
 class InitialBiasFactor : public ceres::SizedCostFunction<6, 9> {
  public:
   InitialBiasFactor(const Eigen::Vector3d &_Ba, const Eigen::Vector3d &_Bg) {
@@ -53,3 +55,5 @@ class InitialBiasFactor : public ceres::SizedCostFunction<6, 9> {
   Eigen::Vector3d init_Ba, init_Bg;
   Eigen::Matrix<double, 6, 6> sqrt_info;
 };
+
+} // namespace vins::estimator

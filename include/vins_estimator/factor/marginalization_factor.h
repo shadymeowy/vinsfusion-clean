@@ -20,6 +20,8 @@
 #include <cstdlib>
 #include <unordered_map>
 
+namespace vins::estimator {
+
 const int NUM_THREADS = 4;
 
 struct ResidualBlockInfo {
@@ -93,3 +95,5 @@ class MarginalizationFactor : public ceres::CostFunction {
 
   MarginalizationInfo *marginalization_info;
 };
+
+} // namespace vins::estimator

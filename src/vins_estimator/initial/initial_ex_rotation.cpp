@@ -12,6 +12,8 @@
 
 #include <vins_estimator/initial/initial_ex_rotation.h>
 
+namespace vins::estimator {
+
 InitialEXRotation::InitialEXRotation() {
   frame_count = 0;
   Rc.push_back(Matrix3d::Identity());
@@ -138,3 +140,5 @@ void InitialEXRotation::decomposeE(cv::Mat E, cv::Mat_<double> &R1,
   t1 = svd.u.col(2);
   t2 = -svd.u.col(2);
 }
+
+} // namespace vins::estimator

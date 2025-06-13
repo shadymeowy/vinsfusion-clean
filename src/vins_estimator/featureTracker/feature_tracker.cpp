@@ -12,6 +12,8 @@
 
 #include <vins_estimator/featureTracker/feature_tracker.h>
 
+namespace vins::estimator {
+
 bool FeatureTracker::inBorder(const cv::Point2f &pt) {
   const int BORDER_SIZE = 1;
   int img_x = cvRound(pt.x);
@@ -506,3 +508,5 @@ void FeatureTracker::removeOutliers(set<int> &removePtsIds) {
 }
 
 cv::Mat FeatureTracker::getTrackImage() { return imTrack; }
+
+}  // namespace vins::estimator

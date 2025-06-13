@@ -18,6 +18,8 @@
 
 #include <Eigen/Dense>
 
+namespace vins::estimator {
+
 class ProjectionFactor : public ceres::SizedCostFunction<2, 7, 7, 7, 1> {
  public:
   ProjectionFactor(const Eigen::Vector3d &_pts_i,
@@ -31,3 +33,5 @@ class ProjectionFactor : public ceres::SizedCostFunction<2, 7, 7, 7, 1> {
   static Eigen::Matrix2d sqrt_info;
   static double sum_t;
 };
+
+} // namespace vins::estimator

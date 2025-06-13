@@ -20,6 +20,8 @@
 #include <opencv2/opencv.hpp>
 #include <vector>
 
+namespace vins::estimator {
+
 const double FOCAL_LENGTH = 460.0;
 const int WINDOW_SIZE = 10;
 const int NUM_OF_F = 1000;
@@ -73,3 +75,5 @@ enum SIZE_PARAMETERIZATION {
 enum StateOrder { O_P = 0, O_R = 3, O_V = 6, O_BA = 9, O_BG = 12 };
 
 enum NoiseOrder { O_AN = 0, O_GN = 3, O_AW = 6, O_GW = 9 };
+
+}  // namespace vins::estimator

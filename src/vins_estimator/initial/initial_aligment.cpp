@@ -12,6 +12,8 @@
 
 #include <vins_estimator/initial/initial_alignment.h>
 
+namespace vins::estimator {
+
 void solveGyroscopeBias(map<double, ImageFrame> &all_image_frame,
                         Vector3d *Bgs) {
   Matrix3d A;
@@ -227,3 +229,5 @@ bool VisualIMUAlignment(map<double, ImageFrame> &all_image_frame, Vector3d *Bgs,
   else
     return false;
 }
+
+} // namespace vins::estimator

@@ -10,6 +10,8 @@
 
 #include <vins_estimator/factor/projection_factor.h>
 
+namespace vins::estimator {
+
 Eigen::Matrix2d ProjectionFactor::sqrt_info;
 double ProjectionFactor::sum_t;
 
@@ -251,3 +253,5 @@ void ProjectionFactor::check(double **parameters) {
   }
   std::cout << num_jacobian << std::endl;
 }
+
+} // namespace vins::estimator

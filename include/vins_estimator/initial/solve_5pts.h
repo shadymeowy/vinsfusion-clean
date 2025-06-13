@@ -22,6 +22,8 @@ using namespace Eigen;
 
 #include <ros/console.h>
 
+namespace vins::estimator {
+
 class MotionEstimator {
  public:
   bool solveRelativeRT(const vector<pair<Vector3d, Vector3d>> &corres,
@@ -34,3 +36,5 @@ class MotionEstimator {
   void decomposeE(cv::Mat E, cv::Mat_<double> &R1, cv::Mat_<double> &R2,
                   cv::Mat_<double> &t1, cv::Mat_<double> &t2);
 };
+
+} // namespace vins::estimator

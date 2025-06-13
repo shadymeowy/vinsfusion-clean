@@ -12,6 +12,8 @@
 
 #include <vins_estimator/factor/projectionTwoFrameOneCamFactor.h>
 
+namespace vins::estimator {
+
 Eigen::Matrix2d ProjectionTwoFrameOneCamFactor::sqrt_info;
 double ProjectionTwoFrameOneCamFactor::sum_t;
 
@@ -286,3 +288,5 @@ void ProjectionTwoFrameOneCamFactor::check(double **parameters) {
   std::cout << num_jacobian.block<2, 1>(0, 18) << std::endl;
   std::cout << num_jacobian.block<2, 1>(0, 19) << std::endl;
 }
+
+} // namespace vins::estimator

@@ -10,6 +10,8 @@
 
 #include <vins_estimator/utility/visualization.h>
 
+namespace vins::estimator {
+
 using namespace ros;
 using namespace Eigen;
 ros::Publisher pub_odometry, pub_latest_odometry;
@@ -393,3 +395,5 @@ void pubKeyframe(const Estimator &estimator) {
     pub_keyframe_point.publish(point_cloud);
   }
 }
+
+}  // namespace vins::estimator

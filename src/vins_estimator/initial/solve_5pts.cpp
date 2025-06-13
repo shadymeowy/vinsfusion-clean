@@ -12,6 +12,7 @@
 
 #include <vins_estimator/initial/solve_5pts.h>
 
+// TODO: what is this namespace?
 namespace cv {
 void decomposeEssentialMat(InputArray _E, OutputArray _R1, OutputArray _R2,
                            OutputArray _t) {
@@ -195,6 +196,8 @@ int recoverPose(InputArray E, InputArray _points1, InputArray _points2,
 }
 }  // namespace cv
 
+namespace vins::estimator {
+
 bool MotionEstimator::solveRelativeRT(
     const vector<pair<Vector3d, Vector3d>> &corres, Matrix3d &Rotation,
     Vector3d &Translation) {
@@ -229,3 +232,5 @@ bool MotionEstimator::solveRelativeRT(
   }
   return false;
 }
+
+}  // namespace vins::estimator
