@@ -65,6 +65,10 @@ struct Parameters {
   int show_track;
   int flow_back;
 
+  std::string pose_graph_save_path;
+  int save_image;
+  int load_previous_pose_graph;
+
   void read_from_file(std::string config_file);
 };
 

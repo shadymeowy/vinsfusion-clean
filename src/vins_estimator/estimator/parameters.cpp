@@ -135,6 +135,10 @@ void Parameters::read_from_file(std::string config_file) {
     printf("no imu, fix extrinsic param; no time offset calibration\n");
   }
 
+  fsSettings["pose_graph_save_path"] >> pose_graph_save_path;
+  save_image = fsSettings["save_image"];
+  load_previous_pose_graph = fsSettings["load_previous_pose_graph"];
+
   fsSettings.release();
 }
 
