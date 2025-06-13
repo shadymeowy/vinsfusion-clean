@@ -95,8 +95,6 @@ target_link_libraries(vins_estimator_lib
   ${catkin_LIBRARIES}
   ${OpenCV_LIBS}
   ${CERES_LIBRARIES}
-  dvision_lib
-  geographiclib
   camodocal
 )
 
@@ -106,9 +104,7 @@ target_link_libraries(global_fusion_lib
   ${catkin_LIBRARIES}
   ${OpenCV_LIBS}
   ${CERES_LIBRARIES}
-  dvision_lib
   geographiclib
-  camodocal
 )
 
 ## Create a shared library for loop fusion
@@ -118,7 +114,6 @@ target_link_libraries(loop_fusion_lib
   ${OpenCV_LIBS}
   ${CERES_LIBRARIES}
   dvision_lib
-  geographiclib
   camodocal
 )
 
