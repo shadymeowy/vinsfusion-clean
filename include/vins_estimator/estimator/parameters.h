@@ -22,49 +22,51 @@
 
 namespace vins::estimator {
 
-const double FOCAL_LENGTH = 460.0;
-const int WINDOW_SIZE = 10;
-const int NUM_OF_F = 1000;
-// #define UNIT_SPHERE_ERROR
+#define WINDOW_SIZE 10
+#define NUM_OF_F 1000
 
-extern double INIT_DEPTH;
-extern double MIN_PARALLAX;
-extern int ESTIMATE_EXTRINSIC;
+struct Parameters {
+  double focal_length = 460.0;
 
-extern double ACC_N, ACC_W;
-extern double GYR_N, GYR_W;
+  double init_depth;
+  double min_parallax;
+  double acc_n, acc_w;
+  double gyr_n, gyr_w;
 
-extern std::vector<Eigen::Matrix3d> RIC;
-extern std::vector<Eigen::Vector3d> TIC;
-extern Eigen::Vector3d G;
+  std::vector<Eigen::Matrix3d> ric;
+  std::vector<Eigen::Vector3d> tic;
 
-extern double BIAS_ACC_THRESHOLD;
-extern double BIAS_GYR_THRESHOLD;
-extern double SOLVER_TIME;
-extern int NUM_ITERATIONS;
-extern std::string EX_CALIB_RESULT_PATH;
-extern std::string VINS_RESULT_PATH;
-extern std::string OUTPUT_FOLDER;
-extern std::string IMU_TOPIC;
-extern double TD;
-extern int ESTIMATE_TD;
-extern int ROLLING_SHUTTER;
-extern int ROW, COL;
-extern int NUM_OF_CAM;
-extern int STEREO;
-extern int USE_IMU;
-extern int MULTIPLE_THREAD;
+  Eigen::Vector3d g{0.0, 0.0, 9.8};
 
-extern std::string IMAGE0_TOPIC, IMAGE1_TOPIC;
-extern std::string FISHEYE_MASK;
-extern std::vector<std::string> CAM_NAMES;
-extern int MAX_CNT;
-extern int MIN_DIST;
-extern double F_THRESHOLD;
-extern int SHOW_TRACK;
-extern int FLOW_BACK;
+  double bias_acc_threshold;
+  double bias_gyr_threshold;
+  double solver_time;
+  int num_iterations;
+  int estimate_extrinsic;
+  int estimate_td;
+  int rolling_shutter;
+  std::string ex_calib_result_path;
+  std::string vins_result_path;
+  std::string output_folder;
+  std::string imu_topic;
+  int row, col;
+  double td;
+  int num_of_cam;
+  int stereo;
+  int use_imu;
+  int multiple_thread;
+  
+  std::string image0_topic, image1_topic;
+  std::string fisheye_mask;
+  std::vector<std::string> cam_names;
+  int max_cnt;
+  int min_dist;
+  double f_threshold;
+  int show_track;
+  int flow_back;
 
-void readParameters(std::string config_file);
+  void read_from_file(std::string config_file);
+};
 
 enum SIZE_PARAMETERIZATION {
   SIZE_POSE = 7,

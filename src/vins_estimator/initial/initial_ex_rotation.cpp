@@ -14,12 +14,11 @@
 
 namespace vins::estimator {
 
-InitialEXRotation::InitialEXRotation() {
-  frame_count = 0;
+InitialEXRotation::InitialEXRotation(Parameters &params)
+    : params(params), frame_count(0), ric(Matrix3d::Identity()) {
   Rc.push_back(Matrix3d::Identity());
   Rc_g.push_back(Matrix3d::Identity());
   Rimu.push_back(Matrix3d::Identity());
-  ric = Matrix3d::Identity();
 }
 
 bool InitialEXRotation::CalibrationExRotation(
@@ -141,4 +140,4 @@ void InitialEXRotation::decomposeE(cv::Mat E, cv::Mat_<double> &R1,
   t2 = -svd.u.col(2);
 }
 
-} // namespace vins::estimator
+}  // namespace vins::estimator

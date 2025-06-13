@@ -23,8 +23,8 @@ namespace vins::estimator {
 class IMUFactor : public ceres::SizedCostFunction<15, 7, 9, 7, 9> {
  public:
   IMUFactor() = delete;
-  IMUFactor(IntegrationBase *_pre_integration)
-      : pre_integration(_pre_integration) {}
+  IMUFactor(IntegrationBase *pre_integration)
+      : pre_integration(pre_integration) {}
   virtual bool Evaluate(const double *const *parameters, double *residuals,
                         double **jacobians) const {
     Eigen::Vector3d Pi(parameters[0][0], parameters[0][1], parameters[0][2]);
@@ -108,7 +108,7 @@ class IMUFactor : public ceres::SizedCostFunction<15, 7, 9, 7, 9> {
         jacobian_pose_i.block<3, 3>(O_P, O_P) =
             -Qi.inverse().toRotationMatrix();
         jacobian_pose_i.block<3, 3>(O_P, O_R) = Utility::skewSymmetric(
-            Qi.inverse() * (0.5 * G * sum_dt * sum_dt + Pj - Pi - Vi * sum_dt));
+            Qi.inverse() * (0.5 * pre_integration->g * sum_dt * sum_dt + Pj - Pi - Vi * sum_dt));
 
 #if 0
             jacobian_pose_i.block<3, 3>(O_R, O_R) = -(Qj.inverse() * Qi).toRotationMatrix();
@@ -123,7 +123,7 @@ class IMUFactor : public ceres::SizedCostFunction<15, 7, 9, 7, 9> {
 #endif
 
         jacobian_pose_i.block<3, 3>(O_V, O_R) =
-            Utility::skewSymmetric(Qi.inverse() * (G * sum_dt + Vj - Vi));
+            Utility::skewSymmetric(Qi.inverse() * (pre_integration->g * sum_dt + Vj - Vi));
 
         jacobian_pose_i = sqrt_info * jacobian_pose_i;
 

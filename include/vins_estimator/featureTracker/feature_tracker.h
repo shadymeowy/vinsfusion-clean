@@ -38,7 +38,7 @@ void reduceVector(vector<int> &v, vector<uchar> status);
 
 class FeatureTracker {
  public:
-  FeatureTracker();
+  FeatureTracker(Parameters &params);
   map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> trackImage(
       double _cur_time, const cv::Mat &_img, const cv::Mat &_img1 = cv::Mat());
   void readIntrinsicParameter(const vector<string> &calib_file);
@@ -61,6 +61,8 @@ class FeatureTracker {
                  map<int, cv::Point2f> &prevLeftPtsMap);
   bool inBorder(const cv::Point2f &pt);
   double distance(cv::Point2f &pt1, cv::Point2f &pt2);
+
+  Parameters &params;
 
   int row, col;
   cv::Mat imTrack;

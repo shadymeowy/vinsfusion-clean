@@ -14,19 +14,20 @@
 #include <ros/ros.h>
 #include <sensor_msgs/Image.h>
 #include <stdio.h>
-#include <vins_estimator/estimator/estimator.h>
 #include <vins_estimator/utility/visualization.h>
 
 #include <cmath>
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include <string>
+#include <vins_estimator/estimator/estimator.h>
 
 using namespace std;
 using namespace Eigen;
 using namespace vins::estimator;
 
-Estimator estimator;
+std::unique_ptr<Estimator> estimator;
+std::unique_ptr<Parameters> params;
 
 Eigen::Matrix3d c1Rc0, c0Rc1;
 Eigen::Vector3d c1Tc0, c0Tc1;
@@ -60,8 +61,12 @@ int main(int argc, char **argv) {
   }
   std::cout << "dataPath: " << dataPath << std::endl;
 
-  readParameters(config_file);
-  estimator.setParameter();
+  // Initialize estimator and parameters
+  params.reset(new Parameters());
+  params->read_from_file(config_file);
+  estimator.reset(new Estimator(*params));
+
+  estimator->setParameter();
   registerPub(n);
 
   // load image list
@@ -82,9 +87,9 @@ int main(int argc, char **argv) {
   string leftImagePath, rightImagePath;
   cv::Mat imLeft, imRight;
   FILE *outFile;
-  outFile = fopen((OUTPUT_FOLDER + "/vio.txt").c_str(), "w");
+  outFile = fopen((params->output_folder + "/vio.txt").c_str(), "w");
   if (outFile == NULL)
-    printf("Output path dosen't exist: %s\n", OUTPUT_FOLDER.c_str());
+    printf("Output path dosen't exist: %s\n", params->output_folder.c_str());
 
   for (size_t i = 0; i < imageTimeList.size(); i++) {
     if (ros::ok()) {
@@ -109,10 +114,10 @@ int main(int argc, char **argv) {
       imRightMsg->header.stamp = ros::Time(imageTimeList[i]);
       pubRightImage.publish(imRightMsg);
 
-      estimator.inputImage(imageTimeList[i], imLeft, imRight);
+      estimator->inputImage(imageTimeList[i], imLeft, imRight);
 
       Eigen::Matrix<double, 4, 4> pose;
-      estimator.getPoseInWorldFrame(pose);
+      estimator->getPoseInWorldFrame(pose);
       if (outFile != NULL)
         fprintf(outFile, "%f %f %f %f %f %f %f %f %f %f %f %f \n", pose(0, 0),
                 pose(0, 1), pose(0, 2), pose(0, 3), pose(1, 0), pose(1, 1),

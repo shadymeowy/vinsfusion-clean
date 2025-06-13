@@ -13,7 +13,6 @@
 #include <cv_bridge/cv_bridge.h>
 #include <ros/ros.h>
 #include <stdio.h>
-#include <vins_estimator/estimator/estimator.h>
 #include <vins_estimator/estimator/parameters.h>
 #include <vins_estimator/utility/visualization.h>
 
@@ -22,10 +21,12 @@
 #include <opencv2/opencv.hpp>
 #include <queue>
 #include <thread>
+#include <vins_estimator/estimator/estimator.h>
 
 using namespace vins::estimator;
 
-Estimator estimator;
+std::unique_ptr<Estimator> estimator;
+std::unique_ptr<Parameters> params;
 
 queue<sensor_msgs::ImageConstPtr> img0_buf;
 queue<sensor_msgs::ImageConstPtr> img1_buf;
@@ -65,7 +66,7 @@ cv::Mat getImageFromMsg(const sensor_msgs::ImageConstPtr &img_msg) {
 // extract images with same timestamp from two topics
 void sync_process() {
   while (ros::ok()) {
-    if (STEREO) {
+    if (params->stereo) {
       cv::Mat image0, image1;
       std_msgs::Header header;
       double time = 0;
@@ -91,7 +92,7 @@ void sync_process() {
         }
       }
       m_buf.unlock();
-      if (!image0.empty()) estimator.inputImage(time, image0, image1);
+      if (!image0.empty()) estimator->inputImage(time, image0, image1);
     } else {
       cv::Mat image;
       std_msgs::Header header;
@@ -104,7 +105,7 @@ void sync_process() {
         img0_buf.pop();
       }
       m_buf.unlock();
-      if (!image.empty()) estimator.inputImage(time, image);
+      if (!image.empty()) estimator->inputImage(time, image);
     }
 
     std::chrono::milliseconds dura(2);
@@ -122,7 +123,7 @@ void imu_callback(const sensor_msgs::ImuConstPtr &imu_msg) {
   double rz = imu_msg->angular_velocity.z;
   Vector3d acc(dx, dy, dz);
   Vector3d gyr(rx, ry, rz);
-  estimator.inputIMU(t, acc, gyr);
+  estimator->inputIMU(t, acc, gyr);
   return;
 }
 
@@ -151,15 +152,15 @@ void feature_callback(const sensor_msgs::PointCloudConstPtr &feature_msg) {
     featureFrame[feature_id].emplace_back(camera_id, xyz_uv_velocity);
   }
   double t = feature_msg->header.stamp.toSec();
-  estimator.inputFeature(t, featureFrame);
+  estimator->inputFeature(t, featureFrame);
   return;
 }
 
 void restart_callback(const std_msgs::BoolConstPtr &restart_msg) {
   if (restart_msg->data == true) {
     ROS_WARN("restart the estimator!");
-    estimator.clearState();
-    estimator.setParameter();
+    estimator->clearState();
+    estimator->setParameter();
   }
   return;
 }
@@ -167,10 +168,10 @@ void restart_callback(const std_msgs::BoolConstPtr &restart_msg) {
 void imu_switch_callback(const std_msgs::BoolConstPtr &switch_msg) {
   if (switch_msg->data == true) {
     // ROS_WARN("use IMU!");
-    estimator.changeSensorType(1, STEREO);
+    estimator->changeSensorType(1, params->stereo);
   } else {
     // ROS_WARN("disable IMU!");
-    estimator.changeSensorType(0, STEREO);
+    estimator->changeSensorType(0, params->stereo);
   }
   return;
 }
@@ -178,10 +179,10 @@ void imu_switch_callback(const std_msgs::BoolConstPtr &switch_msg) {
 void cam_switch_callback(const std_msgs::BoolConstPtr &switch_msg) {
   if (switch_msg->data == true) {
     // ROS_WARN("use stereo!");
-    estimator.changeSensorType(USE_IMU, 1);
+    estimator->changeSensorType(params->use_imu, 1);
   } else {
     // ROS_WARN("use mono camera (left)!");
-    estimator.changeSensorType(USE_IMU, 0);
+    estimator->changeSensorType(params->use_imu, 0);
   }
   return;
 }
@@ -201,8 +202,12 @@ int main(int argc, char **argv) {
   }
   std::cout << "config_file: " << config_file << std::endl;
 
-  readParameters(config_file);
-  estimator.setParameter();
+  // Initialize estimator and parameters
+  params.reset(new Parameters());
+  params->read_from_file(config_file);
+  estimator.reset(new Estimator(*params));
+
+  estimator->setParameter();
 
 #ifdef EIGEN_DONT_PARALLELIZE
   ROS_DEBUG("EIGEN_DONT_PARALLELIZE");
@@ -213,16 +218,16 @@ int main(int argc, char **argv) {
   registerPub(n);
 
   ros::Subscriber sub_imu;
-  if (USE_IMU) {
-    sub_imu = n.subscribe(IMU_TOPIC, 2000, imu_callback,
+  if (params->use_imu) {
+    sub_imu = n.subscribe(params->imu_topic, 2000, imu_callback,
                           ros::TransportHints().tcpNoDelay());
   }
   ros::Subscriber sub_feature =
       n.subscribe("/feature_tracker/feature", 2000, feature_callback);
-  ros::Subscriber sub_img0 = n.subscribe(IMAGE0_TOPIC, 100, img0_callback);
+  ros::Subscriber sub_img0 = n.subscribe(params->image0_topic, 100, img0_callback);
   ros::Subscriber sub_img1;
-  if (STEREO) {
-    sub_img1 = n.subscribe(IMAGE1_TOPIC, 100, img1_callback);
+  if (params->stereo) {
+    sub_img1 = n.subscribe(params->image1_topic, 100, img1_callback);
   }
   ros::Subscriber sub_restart =
       n.subscribe("/vins_restart", 100, restart_callback);

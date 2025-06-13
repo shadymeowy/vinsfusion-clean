@@ -87,9 +87,9 @@ void printStatistics(const Estimator &estimator, double t) {
   // estimator.Ps[WINDOW_SIZE].y(), estimator.Ps[WINDOW_SIZE].z());
   ROS_DEBUG_STREAM("position: " << estimator.Ps[WINDOW_SIZE].transpose());
   ROS_DEBUG_STREAM("orientation: " << estimator.Vs[WINDOW_SIZE].transpose());
-  if (ESTIMATE_EXTRINSIC) {
-    cv::FileStorage fs(EX_CALIB_RESULT_PATH, cv::FileStorage::WRITE);
-    for (int i = 0; i < NUM_OF_CAM; i++) {
+  if (estimator.params.estimate_extrinsic) {
+    cv::FileStorage fs(estimator.params.ex_calib_result_path, cv::FileStorage::WRITE);
+    for (int i = 0; i < estimator.params.num_of_cam; i++) {
       // ROS_DEBUG("calibration result for camera %d", i);
       ROS_DEBUG_STREAM("extirnsic tic: " << estimator.tic[i].transpose());
       ROS_DEBUG_STREAM(
@@ -118,7 +118,7 @@ void printStatistics(const Estimator &estimator, double t) {
   sum_of_path += (estimator.Ps[WINDOW_SIZE] - last_path).norm();
   last_path = estimator.Ps[WINDOW_SIZE];
   ROS_DEBUG("sum of path %f", sum_of_path);
-  if (ESTIMATE_TD) ROS_INFO("td %f", estimator.td);
+  if (estimator.params.estimate_td) ROS_INFO("td %f", estimator.td);
 }
 
 void pubOdometry(const Estimator &estimator, const std_msgs::Header &header) {
@@ -151,7 +151,7 @@ void pubOdometry(const Estimator &estimator, const std_msgs::Header &header) {
     pub_path.publish(path);
 
     // write result to file
-    ofstream foutC(VINS_RESULT_PATH, ios::app);
+    ofstream foutC(estimator.params.vins_result_path, ios::app);
     foutC.setf(ios::fixed, ios::floatfield);
     foutC.precision(0);
     foutC << header.stamp.toSec() * 1e9 << ",";
@@ -225,7 +225,7 @@ void pubCameraPose(const Estimator &estimator, const std_msgs::Header &header) {
 
     cameraposevisual.reset();
     cameraposevisual.add_pose(P, R);
-    if (STEREO) {
+    if (estimator.params.stereo) {
       Vector3d P = estimator.Ps[i] + estimator.Rs[i] * estimator.tic[1];
       Quaterniond R = Quaterniond(estimator.Rs[i] * estimator.ric[1]);
       cameraposevisual.add_pose(P, R);

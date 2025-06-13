@@ -80,7 +80,7 @@ class FeaturePerId {
 
 class FeatureManager {
  public:
-  FeatureManager(Matrix3d _Rs[]);
+  FeatureManager(Matrix3d _Rs[], Parameters &params);
 
   void setRic(Matrix3d _ric[]);
   void clearState();
@@ -116,6 +116,8 @@ class FeatureManager {
   int last_track_num;
 
  private:
+  Parameters &params;
+
   double last_average_parallax;
   int new_feature_num;
   int long_track_num;
@@ -124,6 +126,6 @@ class FeatureManager {
   Matrix3d ric[2];
 };
 
-}  // namespace vins::estimator
+} // namespace vins::estimator
 
 #endif

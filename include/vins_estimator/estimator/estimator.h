@@ -41,7 +41,7 @@ namespace vins::estimator {
 
 class Estimator {
  public:
-  Estimator();
+  Estimator(Parameters &params);
   ~Estimator();
   void setParameter();
 
@@ -94,6 +94,8 @@ class Estimator {
   enum SolverFlag { INITIAL, NON_LINEAR };
 
   enum MarginalizationFlag { MARGIN_OLD = 0, MARGIN_SECOND_NEW = 1 };
+
+  Parameters &params;
 
   std::mutex mProcess;
   std::mutex mBuf;
@@ -180,4 +182,4 @@ class Estimator {
   bool initThreadFlag;
 };
 
-} // namespace vins::estimator
+}  // namespace vins::estimator

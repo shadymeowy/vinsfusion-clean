@@ -26,7 +26,9 @@ using namespace std;
 using namespace Eigen;
 using namespace vins::estimator;
 
-Estimator estimator;
+std::unique_ptr<Estimator> estimator;
+std::unique_ptr<Parameters> params;
+
 ros::Publisher pubGPS;
 
 int main(int argc, char **argv) {
@@ -98,14 +100,17 @@ int main(int argc, char **argv) {
     std::fclose(file);
   }
 
-  readParameters(config_file);
-  estimator.setParameter();
+  // Initialize estimator and parameters
+  params.reset(new Parameters());
+  params->read_from_file(config_file);
+  estimator.reset(new Estimator(*params));
+
   registerPub(n);
 
   FILE *outFile;
-  outFile = fopen((OUTPUT_FOLDER + "/vio.txt").c_str(), "w");
+  outFile = fopen((params->output_folder + "/vio.txt").c_str(), "w");
   if (outFile == NULL)
-    printf("Output path dosen't exist: %s\n", OUTPUT_FOLDER.c_str());
+    printf("Output path dosen't exist: %s\n", params->output_folder.c_str());
   string leftImagePath, rightImagePath;
   cv::Mat imLeft, imRight;
   double baseTime;
@@ -189,10 +194,10 @@ int main(int argc, char **argv) {
       // printf("pos_accuracy %f \n", pos_accuracy);
       pubGPS.publish(gps_position);
 
-      estimator.inputImage(imgTime, imLeft, imRight);
+      estimator->inputImage(imgTime, imLeft, imRight);
 
       Eigen::Matrix<double, 4, 4> pose;
-      estimator.getPoseInWorldFrame(pose);
+      estimator->getPoseInWorldFrame(pose);
       if (outFile != NULL)
         fprintf(outFile, "%f %f %f %f %f %f %f %f %f %f %f %f \n", pose(0, 0),
                 pose(0, 1), pose(0, 2), pose(0, 3), pose(1, 0), pose(1, 1),
