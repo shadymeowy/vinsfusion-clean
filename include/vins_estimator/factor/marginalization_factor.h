@@ -96,4 +96,4 @@ class MarginalizationFactor : public ceres::CostFunction {
   MarginalizationInfo *marginalization_info;
 };
 
-} // namespace vins::estimator
+}  // namespace vins::estimator

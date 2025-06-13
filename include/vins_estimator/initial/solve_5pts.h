@@ -37,4 +37,4 @@ class MotionEstimator {
                   cv::Mat_<double> &t1, cv::Mat_<double> &t2);
 };
 
-} // namespace vins::estimator
+}  // namespace vins::estimator

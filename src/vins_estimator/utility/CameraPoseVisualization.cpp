@@ -218,4 +218,4 @@ void CameraPoseVisualization::publish_by(ros::Publisher &pub,
   pub.publish(markerArray_msg);
 }
 
-} // namespace vins::estimator
+}  // namespace vins::estimator

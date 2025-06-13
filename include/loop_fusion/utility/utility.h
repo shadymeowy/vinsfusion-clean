@@ -152,4 +152,4 @@ class Utility {
   };
 };
 
-} // namespace vins::loop_fusion
+}  // namespace vins::loop_fusion

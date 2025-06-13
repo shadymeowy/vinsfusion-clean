@@ -39,4 +39,4 @@ bool PoseLocalParameterization::ComputeJacobian(const double *x,
   return true;
 }
 
-} // namespace vins::estimator
+}  // namespace vins::estimator

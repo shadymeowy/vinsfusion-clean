@@ -85,4 +85,4 @@ class GlobalSFM {
   int feature_num;
 };
 
-} // namespace vins::estimator
+}  // namespace vins::estimator

@@ -421,4 +421,4 @@ bool MarginalizationFactor::Evaluate(const double *const *parameters,
   return true;
 }
 
-} // namespace vins::estimator
+}  // namespace vins::estimator

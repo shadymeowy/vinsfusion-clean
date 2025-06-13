@@ -34,4 +34,4 @@ class ProjectionFactor : public ceres::SizedCostFunction<2, 7, 7, 7, 1> {
   static double sum_t;
 };
 
-} // namespace vins::estimator
+}  // namespace vins::estimator

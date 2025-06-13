@@ -25,4 +25,4 @@ class PoseLocalParameterization : public ceres::LocalParameterization {
   virtual int LocalSize() const { return 6; };
 };
 
-} // namespace vins::estimator
+}  // namespace vins::estimator

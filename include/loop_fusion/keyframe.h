@@ -121,4 +121,4 @@ class KeyFrame {
   Eigen::Matrix<double, 8, 1> loop_info;
 };
 
-} // namespace vins::loop_fusion
+}  // namespace vins::loop_fusion

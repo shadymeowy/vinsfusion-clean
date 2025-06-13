@@ -42,4 +42,4 @@ class ProjectionOneFrameTwoCamFactor
   static double sum_t;
 };
 
-} // namespace vins::estimator
+}  // namespace vins::estimator

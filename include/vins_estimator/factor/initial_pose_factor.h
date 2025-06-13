@@ -113,4 +113,4 @@ class InitialPoseFactor : public ceres::SizedCostFunction<6, 7> {
   Eigen::Matrix<double, 6, 6> sqrt_info;
 };
 
-} // namespace vins::estimator
+}  // namespace vins::estimator

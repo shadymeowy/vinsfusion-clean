@@ -32,4 +32,4 @@ class TicToc {
   std::chrono::time_point<std::chrono::system_clock> start, end;
 };
 
-} // namespace vins::loop_fusion
+}  // namespace vins::loop_fusion

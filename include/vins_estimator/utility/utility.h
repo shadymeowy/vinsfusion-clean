@@ -152,4 +152,4 @@ class Utility {
   };
 };
 
-} // namespace vins::estimator
+}  // namespace vins::estimator

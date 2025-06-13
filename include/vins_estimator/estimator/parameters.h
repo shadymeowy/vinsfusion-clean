@@ -55,7 +55,7 @@ struct Parameters {
   int stereo;
   int use_imu;
   int multiple_thread;
-  
+
   std::string image0_topic, image1_topic;
   std::string fisheye_mask;
   std::vector<std::string> cam_names;

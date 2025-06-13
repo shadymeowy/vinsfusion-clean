@@ -138,4 +138,4 @@ void Parameters::read_from_file(std::string config_file) {
   fsSettings.release();
 }
 
-} // namespace vins::estimator
+}  // namespace vins::estimator

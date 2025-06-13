@@ -56,4 +56,4 @@ class InitialBiasFactor : public ceres::SizedCostFunction<6, 9> {
   Eigen::Matrix<double, 6, 6> sqrt_info;
 };
 
-} // namespace vins::estimator
+}  // namespace vins::estimator

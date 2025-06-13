@@ -14,13 +14,13 @@
 #include <ros/ros.h>
 #include <sensor_msgs/Image.h>
 #include <stdio.h>
+#include <vins_estimator/estimator/estimator.h>
 #include <vins_estimator/utility/visualization.h>
 
 #include <cmath>
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include <string>
-#include <vins_estimator/estimator/estimator.h>
 
 using namespace std;
 using namespace Eigen;

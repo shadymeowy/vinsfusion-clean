@@ -256,4 +256,4 @@ void ProjectionOneFrameTwoCamFactor::check(double **parameters) {
   std::cout << num_jacobian.block<2, 1>(0, 13) << std::endl;
 }
 
-} // namespace vins::estimator
+}  // namespace vins::estimator

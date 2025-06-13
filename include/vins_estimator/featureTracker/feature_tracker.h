@@ -88,4 +88,4 @@ class FeatureTracker {
   bool hasPrediction;
 };
 
-} // namespace vins::estimator
+}  // namespace vins::estimator

@@ -126,6 +126,6 @@ class FeatureManager {
   Matrix3d ric[2];
 };
 
-} // namespace vins::estimator
+}  // namespace vins::estimator
 
 #endif

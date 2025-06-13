@@ -38,4 +38,4 @@ extern int COL;
 extern std::string VINS_RESULT_PATH;
 extern int DEBUG_IMAGE;
 
-} // namespace vins::loop_fusion
+}  // namespace vins::loop_fusion

@@ -88,7 +88,8 @@ void printStatistics(const Estimator &estimator, double t) {
   ROS_DEBUG_STREAM("position: " << estimator.Ps[WINDOW_SIZE].transpose());
   ROS_DEBUG_STREAM("orientation: " << estimator.Vs[WINDOW_SIZE].transpose());
   if (estimator.params.estimate_extrinsic) {
-    cv::FileStorage fs(estimator.params.ex_calib_result_path, cv::FileStorage::WRITE);
+    cv::FileStorage fs(estimator.params.ex_calib_result_path,
+                       cv::FileStorage::WRITE);
     for (int i = 0; i < estimator.params.num_of_cam; i++) {
       // ROS_DEBUG("calibration result for camera %d", i);
       ROS_DEBUG_STREAM("extirnsic tic: " << estimator.tic[i].transpose());

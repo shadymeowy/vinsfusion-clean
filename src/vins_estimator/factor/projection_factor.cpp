@@ -254,4 +254,4 @@ void ProjectionFactor::check(double **parameters) {
   std::cout << num_jacobian << std::endl;
 }
 
-} // namespace vins::estimator
+}  // namespace vins::estimator

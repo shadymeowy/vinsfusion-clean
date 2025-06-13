@@ -63,4 +63,4 @@ class CameraPoseVisualization {
   static const Eigen::Vector3d lt2;
 };
 
-} // namespace vins::loop_fusion
+}  // namespace vins::loop_fusion

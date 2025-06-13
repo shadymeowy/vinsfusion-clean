@@ -65,8 +65,7 @@ MatrixXd TangentBasis(Vector3d &g0) {
 }
 
 void RefineGravity(map<double, ImageFrame> &all_image_frame, Vector3d &g,
-                   VectorXd &x, const Vector3d &G, const Vector3d &tic)
-{
+                   VectorXd &x, const Vector3d &G, const Vector3d &tic) {
   Vector3d g0 = g.normalized() * G.norm();
   Vector3d lx, ly;
   // VectorXd x;
@@ -142,7 +141,8 @@ void RefineGravity(map<double, ImageFrame> &all_image_frame, Vector3d &g,
 }
 
 bool LinearAlignment(map<double, ImageFrame> &all_image_frame, Vector3d &g,
-                     VectorXd &x, const Eigen::Vector3d &G, const Eigen::Vector3d &tic) {
+                     VectorXd &x, const Eigen::Vector3d &G,
+                     const Eigen::Vector3d &tic) {
   int all_frame_count = all_image_frame.size();
   int n_state = all_frame_count * 3 + 3 + 1;
 
@@ -222,7 +222,8 @@ bool LinearAlignment(map<double, ImageFrame> &all_image_frame, Vector3d &g,
 }
 
 bool VisualIMUAlignment(map<double, ImageFrame> &all_image_frame, Vector3d *Bgs,
-                        Vector3d &g, VectorXd &x, const Eigen::Vector3d &G, const Eigen::Vector3d &tic) {
+                        Vector3d &g, VectorXd &x, const Eigen::Vector3d &G,
+                        const Eigen::Vector3d &tic) {
   solveGyroscopeBias(all_image_frame, Bgs);
 
   if (LinearAlignment(all_image_frame, g, x, G, tic))
@@ -231,4 +232,4 @@ bool VisualIMUAlignment(map<double, ImageFrame> &all_image_frame, Vector3d *Bgs,
     return false;
 }
 
-} // namespace vins::estimator
+}  // namespace vins::estimator

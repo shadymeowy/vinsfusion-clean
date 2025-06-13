@@ -55,4 +55,4 @@ class CameraPoseVisualization {
   static const Eigen::Vector3d lt2;
 };
 
-} // namespace vins::estimator
+}  // namespace vins::estimator

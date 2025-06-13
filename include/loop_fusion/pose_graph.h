@@ -341,4 +341,4 @@ struct RelativeRTError {
   double t_var, q_var;
 };
 
-} // namespace vins::loop_fusion
+}  // namespace vins::loop_fusion

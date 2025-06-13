@@ -71,4 +71,4 @@ void pubRelocalization(const Estimator &estimator);
 
 void pubCar(const Estimator &estimator, const std_msgs::Header &header);
 
-} // namespace vins::estimator
+}  // namespace vins::estimator

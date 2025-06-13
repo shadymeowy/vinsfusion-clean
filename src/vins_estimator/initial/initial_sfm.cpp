@@ -299,4 +299,4 @@ bool GlobalSFM::construct(int frame_num, Quaterniond *q, Vector3d *T, int l,
   return true;
 }
 
-} // namespace vins::estimator
+}  // namespace vins::estimator

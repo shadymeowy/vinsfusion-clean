@@ -516,4 +516,4 @@ double FeatureManager::compensatedParallax2(const FeaturePerId &it_per_id,
   return ans;
 }
 
-} // namespace vins::estimator
+}  // namespace vins::estimator
