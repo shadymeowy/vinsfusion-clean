@@ -12,6 +12,8 @@
 
 #include <loop_fusion/pose_graph.h>
 
+namespace vins::loop_fusion {
+
 PoseGraph::PoseGraph() : t_optimization() {
   posegraph_visualization = new CameraPoseVisualization(1.0, 0.0, 1.0, 1.0);
   posegraph_visualization->setScale(0.1);
@@ -1008,3 +1010,5 @@ void PoseGraph::publish() {
   // posegraph_visualization->publish_by(pub_pose_graph,
   // path[sequence_cnt].header);
 }
+
+}  // namespace vins::loop_fusion

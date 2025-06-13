@@ -15,6 +15,8 @@
 #include <cstring>
 #include <eigen3/Eigen/Dense>
 
+namespace vins::loop_fusion {
+
 class Utility {
  public:
   template <typename Derived>
@@ -149,3 +151,5 @@ class Utility {
              two_pi * std::floor((-angle_degrees + T(180)) / two_pi);
   };
 };
+
+} // namespace vins::loop_fusion

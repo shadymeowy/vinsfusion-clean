@@ -20,6 +20,8 @@
 #include <Eigen/Geometry>
 #include <opencv2/opencv.hpp>
 
+namespace vins::loop_fusion {
+
 class CameraPoseVisualization {
  public:
   std::string m_marker_ns;
@@ -60,3 +62,5 @@ class CameraPoseVisualization {
   static const Eigen::Vector3d lt1;
   static const Eigen::Vector3d lt2;
 };
+
+} // namespace vins::loop_fusion

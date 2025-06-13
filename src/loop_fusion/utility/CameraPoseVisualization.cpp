@@ -10,6 +10,8 @@
 
 #include <loop_fusion/utility/CameraPoseVisualization.h>
 
+namespace vins::loop_fusion {
+
 const Eigen::Vector3d CameraPoseVisualization::imlt =
     Eigen::Vector3d(-1.0, -0.5, 1.0);
 const Eigen::Vector3d CameraPoseVisualization::imrt =
@@ -338,3 +340,5 @@ Eigen::Matrix3d& R, const cv::Mat &src)
     }
 }
 */
+
+} // namespace vins::loop_fusion

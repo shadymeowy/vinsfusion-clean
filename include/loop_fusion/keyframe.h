@@ -32,6 +32,8 @@ using namespace Eigen;
 using namespace std;
 using namespace DVision;
 
+namespace vins::loop_fusion {
+
 class BriefExtractor {
  public:
   virtual void operator()(const cv::Mat &im, vector<cv::KeyPoint> &keys,
@@ -118,3 +120,5 @@ class KeyFrame {
   int loop_index;
   Eigen::Matrix<double, 8, 1> loop_info;
 };
+
+} // namespace vins::loop_fusion

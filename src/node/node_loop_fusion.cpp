@@ -37,6 +37,9 @@
 #define SKIP_FIRST_CNT 10
 using namespace std;
 
+// TODO: remove this namespace declaration from the node
+namespace vins::loop_fusion {
+
 queue<sensor_msgs::ImageConstPtr> image_buf;
 queue<sensor_msgs::PointCloudConstPtr> point_buf;
 queue<nav_msgs::Odometry::ConstPtr> pose_buf;
@@ -53,22 +56,9 @@ bool load_flag = 0;
 bool start_flag = 0;
 double SKIP_DIS = 0;
 
-int VISUALIZATION_SHIFT_X;
-int VISUALIZATION_SHIFT_Y;
-int ROW;
-int COL;
-int DEBUG_IMAGE;
-
-camodocal::CameraPtr m_camera;
-Eigen::Vector3d tic;
-Eigen::Matrix3d qic;
-ros::Publisher pub_match_img;
 ros::Publisher pub_camera_pose_visual;
 ros::Publisher pub_odometry_rect;
 
-std::string BRIEF_PATTERN_FILE;
-std::string POSE_GRAPH_SAVE_PATH;
-std::string VINS_RESULT_PATH;
 CameraPoseVisualization cameraposevisual(1, 0, 0, 1);
 Eigen::Vector3d last_t(-100, -100, -100);
 double last_image_time = -1;
@@ -342,7 +332,7 @@ void process() {
           // printf("u %f, v %f \n", p_2d_uv.x, p_2d_uv.y);
         }
 
-        KeyFrame *keyframe = new KeyFrame(
+        auto *keyframe = new KeyFrame(
             pose_msg->header.stamp.toSec(), frame_index, T, R, image, point_3d,
             point_2d_uv, point_2d_normal, point_id, sequence);
         m_process.lock();
@@ -489,3 +479,7 @@ int main(int argc, char **argv) {
   // }
   return 0;
 }
+
+}  // namespace vins::loop_fusion
+
+int main(int argc, char **argv) { return vins::loop_fusion::main(argc, argv); }

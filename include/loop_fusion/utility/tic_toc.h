@@ -14,6 +14,8 @@
 #include <cstdlib>
 #include <ctime>
 
+namespace vins::loop_fusion {
+
 class TicToc {
  public:
   TicToc() { tic(); }
@@ -29,3 +31,5 @@ class TicToc {
  private:
   std::chrono::time_point<std::chrono::system_clock> start, end;
 };
+
+} // namespace vins::loop_fusion

@@ -23,6 +23,8 @@
 
 #include <eigen3/Eigen/Dense>
 
+namespace vins::loop_fusion {
+
 extern camodocal::CameraPtr m_camera;
 extern Eigen::Vector3d tic;
 extern Eigen::Matrix3d qic;
@@ -35,3 +37,5 @@ extern int ROW;
 extern int COL;
 extern std::string VINS_RESULT_PATH;
 extern int DEBUG_IMAGE;
+
+} // namespace vins::loop_fusion

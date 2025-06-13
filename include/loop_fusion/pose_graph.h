@@ -43,6 +43,8 @@
 using namespace DVision;
 using namespace DBoW2;
 
+namespace vins::loop_fusion {
+
 class PoseGraph {
  public:
   PoseGraph();
@@ -338,3 +340,5 @@ struct RelativeRTError {
   double q_w, q_x, q_y, q_z;
   double t_var, q_var;
 };
+
+} // namespace vins::loop_fusion
