@@ -31,6 +31,23 @@ include_directories(
   ${EIGEN3_INCLUDE_DIR}
 )
 
+## Map Ceres and Eigen3 variables for catkin_package
+# Ceres
+if (CERES_INCLUDE_DIRS)
+  set(Ceres_INCLUDE_DIRS ${CERES_INCLUDE_DIRS})
+endif()
+if (CERES_LIBRARIES)
+  set(Ceres_LIBRARIES ${CERES_LIBRARIES})
+endif()
+
+# Eigen3
+if (EIGEN3_INCLUDE_DIR)
+  set(Eigen3_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIR})
+endif()
+if (EIGEN3_LIBS)
+  set(Eigen3_LIBRARIES ${EIGEN3_LIBS})
+endif()
+
 ## Declare catkin package
 catkin_package(
   INCLUDE_DIRS include
