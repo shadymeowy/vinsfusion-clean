@@ -47,7 +47,7 @@ namespace vins::loop_fusion {
 
 class PoseGraph {
  public:
-  PoseGraph();
+  PoseGraph(Parameters &params);
   ~PoseGraph();
   void registerPub(ros::NodeHandle &n);
   void addKeyFrame(KeyFrame *cur_kf, bool flag_detect_loop);
@@ -55,6 +55,9 @@ class PoseGraph {
   void loadVocabulary(std::string voc_path);
   void setIMUFlag(bool _use_imu);
   KeyFrame *getKeyFrame(int index);
+
+  Parameters &params;
+
   nav_msgs::Path path[10];
   nav_msgs::Path base_path;
   CameraPoseVisualization *posegraph_visualization;

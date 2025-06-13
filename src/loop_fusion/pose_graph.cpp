@@ -14,7 +14,7 @@
 
 namespace vins::loop_fusion {
 
-PoseGraph::PoseGraph() : t_optimization() {
+PoseGraph::PoseGraph(Parameters &params) : t_optimization(), params(params) {
   posegraph_visualization = new CameraPoseVisualization(1.0, 0.0, 1.0, 1.0);
   posegraph_visualization->setScale(0.1);
   posegraph_visualization->setLineWidth(0.01);
@@ -155,8 +155,8 @@ void PoseGraph::addKeyFrame(KeyFrame *cur_kf, bool flag_detect_loop) {
   geometry_msgs::PoseStamped pose_stamped;
   pose_stamped.header.stamp = ros::Time(cur_kf->time_stamp);
   pose_stamped.header.frame_id = "world";
-  pose_stamped.pose.position.x = P.x() + VISUALIZATION_SHIFT_X;
-  pose_stamped.pose.position.y = P.y() + VISUALIZATION_SHIFT_Y;
+  pose_stamped.pose.position.x = P.x();
+  pose_stamped.pose.position.y = P.y();
   pose_stamped.pose.position.z = P.z();
   pose_stamped.pose.orientation.x = Q.x();
   pose_stamped.pose.orientation.y = Q.y();
@@ -166,7 +166,7 @@ void PoseGraph::addKeyFrame(KeyFrame *cur_kf, bool flag_detect_loop) {
   path[sequence_cnt].header = pose_stamped.header;
 
   if (SAVE_LOOP_PATH) {
-    ofstream loop_path_file(VINS_RESULT_PATH, ios::app);
+    ofstream loop_path_file(params.vins_result_path, ios::app);
     loop_path_file.setf(ios::fixed, ios::floatfield);
     loop_path_file.precision(0);
     loop_path_file << cur_kf->time_stamp * 1e9 << ",";
@@ -201,9 +201,8 @@ void PoseGraph::addKeyFrame(KeyFrame *cur_kf, bool flag_detect_loop) {
       cur_kf->getPose(P0, R0);
       if (cur_kf->sequence > 0) {
         // printf("add loop into visual \n");
-        posegraph_visualization->add_loopedge(
-            P0, connected_P +
-                    Vector3d(VISUALIZATION_SHIFT_X, VISUALIZATION_SHIFT_Y, 0));
+        posegraph_visualization->add_loopedge(P0,
+                                              connected_P + Vector3d(0, 0, 0));
       }
     }
   }
@@ -243,8 +242,8 @@ void PoseGraph::loadKeyFrame(KeyFrame *cur_kf, bool flag_detect_loop) {
   geometry_msgs::PoseStamped pose_stamped;
   pose_stamped.header.stamp = ros::Time(cur_kf->time_stamp);
   pose_stamped.header.frame_id = "world";
-  pose_stamped.pose.position.x = P.x() + VISUALIZATION_SHIFT_X;
-  pose_stamped.pose.position.y = P.y() + VISUALIZATION_SHIFT_Y;
+  pose_stamped.pose.position.x = P.x();
+  pose_stamped.pose.position.y = P.y();
   pose_stamped.pose.position.z = P.z();
   pose_stamped.pose.orientation.x = Q.x();
   pose_stamped.pose.orientation.y = Q.y();
@@ -298,7 +297,7 @@ KeyFrame *PoseGraph::getKeyFrame(int index) {
 int PoseGraph::detectLoop(KeyFrame *keyframe, int frame_index) {
   // put image into image_pool; for visualization
   cv::Mat compressed_image;
-  if (DEBUG_IMAGE) {
+  if (params.save_image) {
     int feature_num = keyframe->keypoints.size();
     cv::resize(keyframe->image, compressed_image, cv::Size(376, 240));
     putText(compressed_image, "feature_num:" + to_string(feature_num),
@@ -321,7 +320,7 @@ int PoseGraph::detectLoop(KeyFrame *keyframe, int frame_index) {
   //  score
   bool find_loop = false;
   cv::Mat loop_result;
-  if (DEBUG_IMAGE) {
+  if (params.save_image) {
     loop_result = compressed_image.clone();
     if (ret.size() > 0)
       putText(loop_result, "neighbour score:" + to_string(ret[0].Score),
@@ -329,7 +328,7 @@ int PoseGraph::detectLoop(KeyFrame *keyframe, int frame_index) {
               cv::Scalar(255));
   }
   // visual loop result
-  if (DEBUG_IMAGE) {
+  if (params.save_image) {
     for (unsigned i = 0; i < ret.size(); i++) {
       int tmp_index = ret[i].Id;
       auto it = image_pool.find(tmp_index);
@@ -349,7 +348,7 @@ int PoseGraph::detectLoop(KeyFrame *keyframe, int frame_index) {
       if (ret[i].Score > 0.015) {
         find_loop = true;
         int tmp_index = ret[i].Id;
-        if (DEBUG_IMAGE && 0) {
+        if (params.save_image && 0) {
           auto it = image_pool.find(tmp_index);
           cv::Mat tmp_image = (it->second).clone();
           putText(tmp_image, "loop score:" + to_string(ret[i].Score),
@@ -360,7 +359,7 @@ int PoseGraph::detectLoop(KeyFrame *keyframe, int frame_index) {
       }
     }
   /*
-      if (DEBUG_IMAGE)
+      if (params.save_image)
       {
           cv::imshow("loop_result", loop_result);
           cv::waitKey(20);
@@ -381,7 +380,7 @@ int PoseGraph::detectLoop(KeyFrame *keyframe, int frame_index) {
 void PoseGraph::addKeyFrameIntoVoc(KeyFrame *keyframe) {
   // put image into image_pool; for visualization
   cv::Mat compressed_image;
-  if (DEBUG_IMAGE) {
+  if (params.save_image) {
     int feature_num = keyframe->keypoints.size();
     cv::resize(keyframe->image, compressed_image, cv::Size(376, 240));
     putText(compressed_image, "feature_num:" + to_string(feature_num),
@@ -737,7 +736,7 @@ void PoseGraph::updatePath() {
   posegraph_visualization->reset();
 
   if (SAVE_LOOP_PATH) {
-    ofstream loop_path_file_tmp(VINS_RESULT_PATH, ios::out);
+    ofstream loop_path_file_tmp(params.vins_result_path, ios::out);
     loop_path_file_tmp.close();
   }
 
@@ -752,8 +751,8 @@ void PoseGraph::updatePath() {
     geometry_msgs::PoseStamped pose_stamped;
     pose_stamped.header.stamp = ros::Time((*it)->time_stamp);
     pose_stamped.header.frame_id = "world";
-    pose_stamped.pose.position.x = P.x() + VISUALIZATION_SHIFT_X;
-    pose_stamped.pose.position.y = P.y() + VISUALIZATION_SHIFT_Y;
+    pose_stamped.pose.position.x = P.x();
+    pose_stamped.pose.position.y = P.y();
     pose_stamped.pose.position.z = P.z();
     pose_stamped.pose.orientation.x = Q.x();
     pose_stamped.pose.orientation.y = Q.y();
@@ -768,7 +767,7 @@ void PoseGraph::updatePath() {
     }
 
     if (SAVE_LOOP_PATH) {
-      ofstream loop_path_file(VINS_RESULT_PATH, ios::app);
+      ofstream loop_path_file(params.vins_result_path, ios::app);
       loop_path_file.setf(ios::fixed, ios::floatfield);
       loop_path_file.precision(0);
       loop_path_file << (*it)->time_stamp * 1e9 << ",";
@@ -810,8 +809,7 @@ void PoseGraph::updatePath() {
         (*it)->getPose(P, R);
         if ((*it)->sequence > 0) {
           posegraph_visualization->add_loopedge(
-              P, connected_P +
-                     Vector3d(VISUALIZATION_SHIFT_X, VISUALIZATION_SHIFT_Y, 0));
+              P, connected_P + Vector3d(0, 0, 0));
         }
       }
     }
@@ -824,18 +822,18 @@ void PoseGraph::savePoseGraph() {
   m_keyframelist.lock();
   TicToc tmp_t;
   FILE *pFile;
-  printf("pose graph path: %s\n", POSE_GRAPH_SAVE_PATH.c_str());
+  printf("pose graph path: %s\n", params.pose_graph_save_path.c_str());
   printf("pose graph saving... \n");
-  string file_path = POSE_GRAPH_SAVE_PATH + "pose_graph.txt";
+  string file_path = params.pose_graph_save_path + "pose_graph.txt";
   pFile = fopen(file_path.c_str(), "w");
   // fprintf(pFile, "index time_stamp Tx Ty Tz Qw Qx Qy Qz loop_index
   // loop_info\n");
   list<KeyFrame *>::iterator it;
   for (it = keyframelist.begin(); it != keyframelist.end(); it++) {
     std::string image_path, descriptor_path, brief_path, keypoints_path;
-    if (DEBUG_IMAGE) {
+    if (params.save_image) {
       image_path =
-          POSE_GRAPH_SAVE_PATH + to_string((*it)->index) + "_image.png";
+          params.pose_graph_save_path + to_string((*it)->index) + "_image.png";
       imwrite(image_path.c_str(), (*it)->image);
     }
     Quaterniond VIO_tmp_Q{(*it)->vio_R_w_i};
@@ -859,10 +857,10 @@ void PoseGraph::savePoseGraph() {
     // vector<BRIEF::bitset> brief_descriptors;
     assert((*it)->keypoints.size() == (*it)->brief_descriptors.size());
     brief_path =
-        POSE_GRAPH_SAVE_PATH + to_string((*it)->index) + "_briefdes.dat";
+        params.pose_graph_save_path + to_string((*it)->index) + "_briefdes.dat";
     std::ofstream brief_file(brief_path, std::ios::binary);
-    keypoints_path =
-        POSE_GRAPH_SAVE_PATH + to_string((*it)->index) + "_keypoints.txt";
+    keypoints_path = params.pose_graph_save_path + to_string((*it)->index) +
+                     "_keypoints.txt";
     FILE *keypoints_file;
     keypoints_file = fopen(keypoints_path.c_str(), "w");
     for (int i = 0; i < (int)(*it)->keypoints.size(); i++) {
@@ -882,7 +880,7 @@ void PoseGraph::savePoseGraph() {
 void PoseGraph::loadPoseGraph() {
   TicToc tmp_t;
   FILE *pFile;
-  string file_path = POSE_GRAPH_SAVE_PATH + "pose_graph.txt";
+  string file_path = params.pose_graph_save_path + "pose_graph.txt";
   printf("lode pose graph from: %s \n", file_path.c_str());
   printf("pose graph loading...\n");
   pFile = fopen(file_path.c_str(), "r");
@@ -922,8 +920,9 @@ void PoseGraph::loadPoseGraph() {
     */
     cv::Mat image;
     std::string image_path, descriptor_path;
-    if (DEBUG_IMAGE) {
-      image_path = POSE_GRAPH_SAVE_PATH + to_string(index) + "_image.png";
+    if (params.save_image) {
+      image_path =
+          params.pose_graph_save_path + to_string(index) + "_image.png";
       image = cv::imread(image_path.c_str(), 0);
     }
 
@@ -953,10 +952,10 @@ void PoseGraph::loadPoseGraph() {
 
     // load keypoints, brief_descriptors
     string brief_path =
-        POSE_GRAPH_SAVE_PATH + to_string(index) + "_briefdes.dat";
+        params.pose_graph_save_path + to_string(index) + "_briefdes.dat";
     std::ifstream brief_file(brief_path, std::ios::binary);
     string keypoints_path =
-        POSE_GRAPH_SAVE_PATH + to_string(index) + "_keypoints.txt";
+        params.pose_graph_save_path + to_string(index) + "_keypoints.txt";
     FILE *keypoints_file;
     keypoints_file = fopen(keypoints_path.c_str(), "r");
     vector<cv::KeyPoint> keypoints;
@@ -984,7 +983,7 @@ void PoseGraph::loadPoseGraph() {
 
     KeyFrame *keyframe = new KeyFrame(
         time_stamp, index, VIO_T, VIO_R, PG_T, PG_R, image, loop_index,
-        loop_info, keypoints, keypoints_norm, brief_descriptors);
+        loop_info, keypoints, keypoints_norm, brief_descriptors, params);
     loadKeyFrame(keyframe, 0);
     if (cnt % 20 == 0) {
       publish();

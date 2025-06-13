@@ -34,10 +34,14 @@
 #include <queue>
 #include <thread>
 #include <vector>
-#define SKIP_FIRST_CNT 10
 
 using namespace std;
 using namespace vins::loop_fusion;
+
+#define SKIP_FIRST_CNT 10
+
+std::unique_ptr<Parameters> params;
+std::unique_ptr<PoseGraph> posegraph;
 
 queue<sensor_msgs::ImageConstPtr> image_buf;
 queue<sensor_msgs::PointCloudConstPtr> point_buf;
@@ -47,13 +51,10 @@ std::mutex m_buf;
 std::mutex m_process;
 int frame_index = 0;
 int sequence = 1;
-PoseGraph posegraph;
-int skip_first_cnt = 0;
-int SKIP_CNT;
-int skip_cnt = 0;
+
+int skip_first_idx = 0;
 bool load_flag = 0;
 bool start_flag = 0;
-double SKIP_DIS = 0;
 
 ros::Publisher pub_camera_pose_visual;
 ros::Publisher pub_odometry_rect;
@@ -74,8 +75,8 @@ void new_sequence() {
         "sequences.");
     ROS_BREAK();
   }
-  posegraph.posegraph_visualization->reset();
-  posegraph.publish();
+  posegraph->posegraph_visualization->reset();
+  posegraph->publish();
   m_buf.lock();
   while (!image_buf.empty()) image_buf.pop();
   while (!point_buf.empty()) point_buf.pop();
@@ -125,8 +126,8 @@ void point_callback(const sensor_msgs::PointCloudConstPtr &point_msg) {
     p_3d.y = point_msg->points[i].y;
     p_3d.z = point_msg->points[i].z;
     Eigen::Vector3d tmp =
-        posegraph.r_drift * Eigen::Vector3d(p_3d.x, p_3d.y, p_3d.z) +
-        posegraph.t_drift;
+        posegraph->r_drift * Eigen::Vector3d(p_3d.x, p_3d.y, p_3d.z) +
+        posegraph->t_drift;
     geometry_msgs::Point32 p;
     p.x = tmp(0);
     p.y = tmp(1);
@@ -146,8 +147,8 @@ void margin_point_callback(const sensor_msgs::PointCloudConstPtr &point_msg) {
     p_3d.y = point_msg->points[i].y;
     p_3d.z = point_msg->points[i].z;
     Eigen::Vector3d tmp =
-        posegraph.r_drift * Eigen::Vector3d(p_3d.x, p_3d.y, p_3d.z) +
-        posegraph.t_drift;
+        posegraph->r_drift * Eigen::Vector3d(p_3d.x, p_3d.y, p_3d.z) +
+        posegraph->t_drift;
     geometry_msgs::Point32 p;
     p.x = tmp(0);
     p.y = tmp(1);
@@ -183,11 +184,11 @@ void vio_callback(const nav_msgs::Odometry::ConstPtr &pose_msg) {
   vio_q.y() = pose_msg->pose.pose.orientation.y;
   vio_q.z() = pose_msg->pose.pose.orientation.z;
 
-  vio_t = posegraph.w_r_vio * vio_t + posegraph.w_t_vio;
-  vio_q = posegraph.w_r_vio * vio_q;
+  vio_t = posegraph->w_r_vio * vio_t + posegraph->w_t_vio;
+  vio_q = posegraph->w_r_vio * vio_q;
 
-  vio_t = posegraph.r_drift * vio_t + posegraph.t_drift;
-  vio_q = posegraph.r_drift * vio_q;
+  vio_t = posegraph->r_drift * vio_t + posegraph->t_drift;
+  vio_q = posegraph->r_drift * vio_q;
 
   nav_msgs::Odometry odometry;
   odometry.header = pose_msg->header;
@@ -267,16 +268,9 @@ void process() {
       // printf(" point time %f \n", point_msg->header.stamp.toSec());
       // printf(" image time %f \n", image_msg->header.stamp.toSec());
       //  skip fisrt few
-      if (skip_first_cnt < SKIP_FIRST_CNT) {
-        skip_first_cnt++;
+      if (skip_first_idx < SKIP_FIRST_CNT) {
+        skip_first_idx++;
         continue;
-      }
-
-      if (skip_cnt < SKIP_CNT) {
-        skip_cnt++;
-        continue;
-      } else {
-        skip_cnt = 0;
       }
 
       cv_bridge::CvImageConstPtr ptr;
@@ -304,7 +298,7 @@ void process() {
                                pose_msg->pose.pose.orientation.y,
                                pose_msg->pose.pose.orientation.z)
                        .toRotationMatrix();
-      if ((T - last_t).norm() > SKIP_DIS) {
+      if ((T - last_t).norm() > 0) {
         vector<cv::Point3f> point_3d;
         vector<cv::Point2f> point_2d_uv;
         vector<cv::Point2f> point_2d_normal;
@@ -333,10 +327,10 @@ void process() {
 
         auto *keyframe = new KeyFrame(
             pose_msg->header.stamp.toSec(), frame_index, T, R, image, point_3d,
-            point_2d_uv, point_2d_normal, point_id, sequence);
+            point_2d_uv, point_2d_normal, point_id, sequence, *params);
         m_process.lock();
         start_flag = 1;
-        posegraph.addKeyFrame(keyframe, 1);
+        posegraph->addKeyFrame(keyframe, 1);
         m_process.unlock();
         frame_index++;
         last_t = T;
@@ -352,7 +346,7 @@ void process() {
 //     char c = getchar();
 //     if (c == 's') {
 //       m_process.lock();
-//       posegraph.savePoseGraph();
+//       posegraph->savePoseGraph();
 //       m_process.unlock();
 //       printf(
 //           "save pose graph finish\nyou can set 'load_previous_pose_graph' to
@@ -370,12 +364,6 @@ void process() {
 int main(int argc, char **argv) {
   ros::init(argc, argv, "loop_fusion");
   ros::NodeHandle n("~");
-  posegraph.registerPub(n);
-
-  VISUALIZATION_SHIFT_X = 0;
-  VISUALIZATION_SHIFT_Y = 0;
-  SKIP_CNT = 0;
-  SKIP_DIS = 0;
 
   string config_file;
   if (n.getParam("config_path", config_file)) {
@@ -386,54 +374,35 @@ int main(int argc, char **argv) {
   }
   std::cout << "config_file: " << config_file << std::endl;
 
-  cv::FileStorage fsSettings(config_file, cv::FileStorage::READ);
-  if (!fsSettings.isOpened()) {
-    std::cerr << "ERROR: Wrong path to settings" << std::endl;
-  }
+  params.reset(new Parameters());
+  params->read_from_file(config_file);
+
+  posegraph.reset(new PoseGraph(*params));
+  posegraph->registerPub(n);
 
   cameraposevisual.setScale(0.1);
   cameraposevisual.setLineWidth(0.01);
 
-  std::string IMAGE_TOPIC;
-  int LOAD_PREVIOUS_POSE_GRAPH;
-
-  ROW = fsSettings["image_height"];
-  COL = fsSettings["image_width"];
   std::string pkg_path = ros::package::getPath("vins");
   string vocabulary_file = pkg_path + "/config/brief_k10L6.bin";
   cout << "vocabulary_file" << vocabulary_file << endl;
-  posegraph.loadVocabulary(vocabulary_file);
+  posegraph->loadVocabulary(vocabulary_file);
 
   BRIEF_PATTERN_FILE = pkg_path + "/config/brief_pattern.yml";
   cout << "BRIEF_PATTERN_FILE" << BRIEF_PATTERN_FILE << endl;
 
   int pn = config_file.find_last_of('/');
-  std::string configPath = config_file.substr(0, pn);
-  std::string cam0Calib;
-  fsSettings["cam0_calib"] >> cam0Calib;
-  std::string cam0Path = configPath + "/" + cam0Calib;
-  printf("cam calib path: %s\n", cam0Path.c_str());
+
+  printf("cam calib path: %s\n", params->cam_names[0].c_str());
   m_camera = camodocal::CameraFactory::instance()->generateCameraFromYamlFile(
-      cam0Path.c_str());
+      params->cam_names[0].c_str());
 
-  fsSettings["image0_topic"] >> IMAGE_TOPIC;
-  fsSettings["pose_graph_save_path"] >> POSE_GRAPH_SAVE_PATH;
-  fsSettings["output_path"] >> VINS_RESULT_PATH;
-  fsSettings["save_image"] >> DEBUG_IMAGE;
+  posegraph->setIMUFlag(params->use_imu);
 
-  LOAD_PREVIOUS_POSE_GRAPH = fsSettings["load_previous_pose_graph"];
-  VINS_RESULT_PATH = VINS_RESULT_PATH + "/vio_loop.csv";
-  std::ofstream fout(VINS_RESULT_PATH, std::ios::out);
-  fout.close();
-
-  int USE_IMU = fsSettings["imu"];
-  posegraph.setIMUFlag(USE_IMU);
-  fsSettings.release();
-
-  if (LOAD_PREVIOUS_POSE_GRAPH) {
+  if (params->load_previous_pose_graph) {
     printf("load pose graph\n");
     m_process.lock();
-    posegraph.loadPoseGraph();
+    posegraph->loadPoseGraph();
     m_process.unlock();
     printf("load pose graph finish\n");
     load_flag = 1;
@@ -444,7 +413,8 @@ int main(int argc, char **argv) {
 
   ros::Subscriber sub_vio =
       n.subscribe("/vins_estimator/odometry", 2000, vio_callback);
-  ros::Subscriber sub_image = n.subscribe(IMAGE_TOPIC, 2000, image_callback);
+  ros::Subscriber sub_image =
+      n.subscribe(params->image0_topic, 2000, image_callback);
   ros::Subscriber sub_pose =
       n.subscribe("/vins_estimator/keyframe_pose", 2000, pose_callback);
   ros::Subscriber sub_extrinsic =
