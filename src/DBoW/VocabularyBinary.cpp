@@ -2,10 +2,12 @@
 #include <opencv2/core/core.hpp>
 using namespace std;
 
-VINSLoop::Vocabulary::Vocabulary()
+namespace vins::loop_fusion {
+
+Vocabulary::Vocabulary()
     : nNodes(0), nWords(0), nodes(nullptr), words(nullptr) {}
 
-VINSLoop::Vocabulary::~Vocabulary() {
+Vocabulary::~Vocabulary() {
   if (nodes != nullptr) {
     delete[] nodes;
     nodes = nullptr;
@@ -17,13 +19,13 @@ VINSLoop::Vocabulary::~Vocabulary() {
   }
 }
 
-void VINSLoop::Vocabulary::serialize(ofstream &stream) {
+void Vocabulary::serialize(ofstream &stream) {
   stream.write((const char *)this, staticDataSize());
   stream.write((const char *)nodes, sizeof(Node) * nNodes);
   stream.write((const char *)words, sizeof(Word) * nWords);
 }
 
-void VINSLoop::Vocabulary::deserialize(ifstream &stream) {
+void Vocabulary::deserialize(ifstream &stream) {
   stream.read((char *)this, staticDataSize());
 
   nodes = new Node[nNodes];
@@ -32,3 +34,5 @@ void VINSLoop::Vocabulary::deserialize(ifstream &stream) {
   words = new Word[nWords];
   stream.read((char *)words, sizeof(Word) * nWords);
 }
+
+}  // namespace vins::loop_fusion

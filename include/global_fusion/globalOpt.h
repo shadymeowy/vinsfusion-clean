@@ -27,6 +27,8 @@
 
 using namespace std;
 
+namespace vins::global_fusion {
+
 class GlobalOptimization {
  public:
   GlobalOptimization();
@@ -55,3 +57,5 @@ class GlobalOptimization {
   Eigen::Quaterniond lastQ;
   std::thread threadOpt;
 };
+
+}  // namespace vins::global_fusion

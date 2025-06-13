@@ -14,6 +14,8 @@
 #include <global_fusion/globalOpt.h>
 #include <ros/ros.h>
 
+namespace vins::global_fusion {
+
 GlobalOptimization::GlobalOptimization() {
   initGPS = false;
   newGPS = false;
@@ -278,3 +280,5 @@ void GlobalOptimization::updateGlobalPath() {
     global_path.poses.push_back(pose_stamped);
   }
 }
+
+}  // namespace vins::global_fusion

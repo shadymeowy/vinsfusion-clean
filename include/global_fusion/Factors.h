@@ -14,6 +14,8 @@
 #include <ceres/ceres.h>
 #include <ceres/rotation.h>
 
+namespace vins::global_fusion {
+
 template <typename T>
 inline void QuaternionInverse(const T q[4], T q_inverse[4]) {
   q_inverse[0] = q[0];
@@ -110,3 +112,5 @@ struct RelativeRTError {
   double q_w, q_x, q_y, q_z;
   double t_var, q_var;
 };
+
+}  // namespace vins::global_fusion

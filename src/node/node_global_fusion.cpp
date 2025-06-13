@@ -26,7 +26,7 @@
 #include <mutex>
 #include <queue>
 
-GlobalOptimization globalEstimator;
+vins::global_fusion::GlobalOptimization globalEstimator;
 ros::Publisher pub_global_odometry, pub_global_path, pub_car;
 nav_msgs::Path *global_path;
 double last_vio_t = -1;

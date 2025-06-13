@@ -5,7 +5,7 @@
 #include <fstream>
 #include <string>
 
-namespace VINSLoop {
+namespace vins::loop_fusion {
     
 struct Node {
     int32_t nodeId;
@@ -42,6 +42,6 @@ struct Vocabulary {
     }
 };
 
-}
+} // namespace vins::loop_fusion
 
 #endif /* VocabularyBinary_hpp */
