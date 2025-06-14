@@ -1,10 +1,10 @@
 #include <camodocal/calib/CameraCalibration.h>
 #include <camodocal/camera_models/CameraFactory.h>
 #include <camodocal/camera_models/CostFunctionFactory.h>
-#include <camodocal/gpl/EigenQuaternionParameterization.h>
 #include <camodocal/gpl/EigenUtils.h>
 #include <camodocal/sparse_graph/Transform.h>
 #include <ceres/ceres.h>
+#include <ceres/manifold.h>
 
 #include <algorithm>
 #include <cstdio>
@@ -420,10 +420,10 @@ void CameraCalibration::optimize(CameraPtr &camera, std::vector<cv::Mat> &rvecs,
                                transformVec.at(i).translationData());
     }
 
-    ceres::LocalParameterization *quaternionParameterization =
-        new EigenQuaternionParameterization;
+    ceres::Manifold *quaternionParameterization =
+        new ceres::EigenQuaternionManifold();
 
-    problem.SetParameterization(transformVec.at(i).rotationData(),
+    problem.SetManifold(transformVec.at(i).rotationData(),
                                 quaternionParameterization);
   }
 

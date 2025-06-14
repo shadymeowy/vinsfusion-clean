@@ -11,6 +11,7 @@
 #pragma once
 
 #include <ceres/ceres.h>
+#include <ceres/manifold.h>
 #include <std_msgs/Float32.h>
 #include <std_msgs/Header.h>
 #include <vins_estimator/estimator/feature_manager.h>

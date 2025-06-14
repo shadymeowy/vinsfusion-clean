@@ -18,6 +18,7 @@
 #include <DVision/DVision.h>
 #include <assert.h>
 #include <ceres/ceres.h>
+#include <ceres/manifold.h>
 #include <ceres/rotation.h>
 #include <geometry_msgs/PointStamped.h>
 #include <loop_fusion/keyframe.h>
@@ -120,20 +121,25 @@ T NormalizeAngle(const T &angle_degrees) {
     return angle_degrees;
 };
 
-class AngleLocalParameterization {
+class AngleManifold {
  public:
   template <typename T>
-  bool operator()(const T *theta_radians, const T *delta_theta_radians,
-                  T *theta_radians_plus_delta) const {
+  bool Plus(const T *theta_radians, const T *delta_theta_radians,
+            T *theta_radians_plus_delta) const {
     *theta_radians_plus_delta =
         NormalizeAngle(*theta_radians + *delta_theta_radians);
-
     return true;
   }
 
-  static ceres::LocalParameterization *Create() {
-    return (new ceres::AutoDiffLocalParameterization<AngleLocalParameterization,
-                                                     1, 1>);
+  template <typename T>
+  bool Minus(const T *y_radians, const T *x_radians,
+             T *y_minus_x_radians) const {
+    *y_minus_x_radians = NormalizeAngle(*y_radians - *x_radians);
+    return true;
+  }
+
+  static ceres::Manifold *Create() {
+    return (new ceres::AutoDiffManifold<AngleManifold, 1, 1>);
   }
 };
 

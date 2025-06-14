@@ -11,18 +11,29 @@
 #pragma once
 
 #include <ceres/ceres.h>
+#include <ceres/manifold.h>
 #include <vins_estimator/utility/utility.h>
 
 #include <eigen3/Eigen/Dense>
 
 namespace vins::estimator {
 
-class PoseLocalParameterization : public ceres::LocalParameterization {
+class PoseManifold : public ceres::Manifold {
   virtual bool Plus(const double *x, const double *delta,
                     double *x_plus_delta) const;
-  virtual bool ComputeJacobian(const double *x, double *jacobian) const;
-  virtual int GlobalSize() const { return 7; };
-  virtual int LocalSize() const { return 6; };
+  virtual bool PlusJacobian(const double *x, double *jacobian) const;
+  virtual bool Minus(const double *x, const double *delta,
+                     double *x_plus_delta) const {
+    // raise an error, not implemented
+    throw std::runtime_error(
+        "Minus operation is not implemented for PoseManifold.");
+  }
+  virtual bool MinusJacobian(const double *x, double *jacobian) const {
+    throw std::runtime_error(
+        "PlusMinus operation is not implemented for PoseManifold.");
+  }
+  virtual int AmbientSize() const { return 7; };
+  virtual int TangentSize() const { return 6; };
 };
 
 }  // namespace vins::estimator

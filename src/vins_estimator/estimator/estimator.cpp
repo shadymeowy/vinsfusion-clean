@@ -923,19 +923,20 @@ void Estimator::optimization() {
   // loss_function = new ceres::CauchyLoss(1.0 / params.focal_length);
   // ceres::LossFunction* loss_function = new ceres::HuberLoss(1.0);
   for (int i = 0; i < frame_count + 1; i++) {
-    ceres::LocalParameterization *local_parameterization =
-        new PoseLocalParameterization();
-    problem.AddParameterBlock(para_Pose[i], SIZE_POSE, local_parameterization);
+    ceres::Manifold *manifold =
+        new PoseManifold();
+    problem.AddParameterBlock(para_Pose[i], SIZE_POSE);
+    problem.SetManifold(para_Pose[i], manifold);
     if (params.use_imu)
       problem.AddParameterBlock(para_SpeedBias[i], SIZE_SPEEDBIAS);
   }
   if (!params.use_imu) problem.SetParameterBlockConstant(para_Pose[0]);
 
   for (int i = 0; i < params.num_of_cam; i++) {
-    ceres::LocalParameterization *local_parameterization =
-        new PoseLocalParameterization();
-    problem.AddParameterBlock(para_Ex_Pose[i], SIZE_POSE,
-                              local_parameterization);
+    ceres::Manifold *manifold =
+        new PoseManifold();
+    problem.AddParameterBlock(para_Ex_Pose[i], SIZE_POSE);
+    problem.SetManifold(para_Ex_Pose[i], manifold);
     if ((params.estimate_extrinsic && frame_count == WINDOW_SIZE &&
          Vs[0].norm() > 0.2) ||
         openExEstimation) {

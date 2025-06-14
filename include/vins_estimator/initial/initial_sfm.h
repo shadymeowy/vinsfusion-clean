@@ -12,6 +12,7 @@
 
 #pragma once
 #include <ceres/ceres.h>
+#include <ceres/manifold.h>
 #include <ceres/rotation.h>
 
 #include <cstdlib>
