@@ -3,9 +3,10 @@ project(vins)
 
 ## Set build type
 set(CMAKE_BUILD_TYPE "Release")
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -g")
-set(CMAKE_POSITION_INDEPENDENT_CODE ON) # TODO: Is this necessary?
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 ## Find required packages
 find_package(catkin REQUIRED COMPONENTS
