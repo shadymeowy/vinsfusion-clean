@@ -46,7 +46,7 @@ RUN apt-get update && apt-get install -y \
       rm -rf /var/lib/apt/lists/*
 
 WORKDIR /
-RUN git clone --depth 1 --branch 1.12.0 https://ceres-solver.googlesource.com/ceres-solver
+RUN git clone --depth 1 --branch 2.2.0 https://ceres-solver.googlesource.com/ceres-solver
 WORKDIR /ceres-solver
 RUN mkdir build \
     && cd build \
