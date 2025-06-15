@@ -1,0 +1,23 @@
+{
+  "name": "VINS-Fusion-Dev",
+  "image": "ros:vins-fusion",
+  "runArgs": [
+    "--net=host",
+    "--privileged",
+    "--security-opt=label=disable",
+    "--env=DISPLAY",
+    "--env=QT_X11_NO_MITSHM=1",
+    "--device=/dev/dri",
+    "--device=/dev/video0"
+  ],
+  "mounts": [
+    "source=${localEnv:HOME}/.ws/vinsfusion,target=/root/catkin_ws,type=bind",
+    "source=${localWorkspaceFolder},target=/root/catkin_ws/src/VINS-Fusion,type=bind",
+    "source=/run/media/tdemirdal/tb,target=/datasets,type=bind"
+  ],
+  "workspaceFolder": "/root/catkin_ws/src/VINS-Fusion",
+  "extensions": [
+    "llvm-vs-code-extensions.vscode-clangd"
+  ],
+  "postStartCommand": "cd /root/catkin_ws"
+}
