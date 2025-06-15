@@ -116,8 +116,8 @@ FeatureTracker::trackImage(double _cur_time, const cv::Mat &_img,
           cv::OPTFLOW_USE_INITIAL_FLOW);
 
       int succ_num = 0;
-      for (size_t i = 0; i < status.size(); i++) {
-        if (status[i]) succ_num++;
+      for (unsigned char statu : status) {
+        if (statu) succ_num++;
       }
       if (succ_num < 10)
         cv::calcOpticalFlowPyrLK(prev_img_, cur_img_, prev_pts_, cur_pts_,
@@ -158,7 +158,8 @@ FeatureTracker::trackImage(double _cur_time, const cv::Mat &_img,
 
   for (auto &n : track_cnt_) n++;
 
-  if (1) {
+  // if (true)
+  {
     // rejectWithF();
     ROS_DEBUG("set mask begins");
     TicToc t_m;
@@ -171,18 +172,19 @@ FeatureTracker::trackImage(double _cur_time, const cv::Mat &_img,
     if (n_max_cnt > 0) {
       if (mask_.empty()) cout << "mask is empty " << endl;
       if (mask_.type() != CV_8UC1) cout << "mask type wrong " << endl;
-      cv::goodFeaturesToTrack(cur_img_, n_pts_,
-                              params.max_cnt - cur_pts_.size(), 0.01,
-                              params.min_dist, mask_);
-    } else
-      n_pts_.clear();
-    ROS_DEBUG("detect feature costs: %f ms", t_t.toc());
 
-    for (auto &p : n_pts_) {
-      cur_pts_.push_back(p);
-      ids_.push_back(n_id_++);
-      track_cnt_.push_back(1);
+      vector<cv::Point2f> n_pts;
+      n_pts.reserve(n_max_cnt);
+      cv::goodFeaturesToTrack(cur_img_, n_pts, n_max_cnt, 0.01,
+                              params.min_dist, mask_);
+      for (auto &p : n_pts) {
+        cur_pts_.push_back(p);
+        ids_.push_back(n_id_++);
+        track_cnt_.push_back(1);
+      }
     }
+
+    ROS_DEBUG("detect feature costs: %f ms", t_t.toc());
     // printf("feature cnt after add %d\n", (int)ids.size());
   }
 
