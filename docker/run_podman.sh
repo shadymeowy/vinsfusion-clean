@@ -15,7 +15,7 @@ podman run \
     --device=/dev/video0 \
     -v $HOME/.ws/vinsfusion/:/root/catkin_ws/ \
     -v $(pwd)/:/root/catkin_ws/src/VINS-Fusion/ \
-    -v /run/media/tdemirdal/tb/:/datasets/ \
+    -v $1:/datasets/ \
     ros:vins-fusion \
     /bin/bash -c \
     "cd /root/catkin_ws/; source devel/setup.bash; bash"
