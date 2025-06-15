@@ -2,9 +2,11 @@
     <arg name="config_path" default="$(find vins)/config/euroc/euroc_mono_imu_config.yaml" />
     <arg name="bag_path" default="/path/to/your/YOUR_DATASET_FOLDER/MH_01_easy.bag" />
     <arg name="nowait" default="false" />
+    <arg name="rviz" default="true" />
 
     <node name="rvizvisualisation" pkg="rviz" type="rviz" output="log"
-        args="-d $(find vins)/config/vins_rviz_config.rviz" />
+        args="-d $(find vins)/config/vins_rviz_config.rviz"
+        if="$(arg rviz)" />
 
     <node name="vins_estimator" pkg="vins" type="vins_node" output="screen">
         <param name="config_path" value="$(arg config_path)" />
