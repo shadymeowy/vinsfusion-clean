@@ -56,7 +56,8 @@ RUN apt-get update && \
 RUN apt-get update && \
     apt-get install -y \
       clang-format-18 \
-      clang-tidy-18 && \
+      clang-tidy-18 \
+      clangd-18 && \
       rm -rf /var/lib/apt/lists/*
 
 # Set clang-format and clang-tidy alternatives
@@ -79,3 +80,8 @@ RUN update-alternatives --install \
     /usr/bin/clang-apply-replacements \
     clang-apply-replacements \
     /usr/bin/clang-apply-replacements-18 100
+
+RUN update-alternatives --install \
+    /usr/bin/clangd \
+    clangd \
+    /usr/bin/clangd-18 100
