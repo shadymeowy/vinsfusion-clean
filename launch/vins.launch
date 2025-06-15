@@ -1,6 +1,7 @@
 <launch>
     <arg name="config_path" default="$(find vins)/config/euroc/euroc_mono_imu_config.yaml" />
     <arg name="bag_path" default="/path/to/your/YOUR_DATASET_FOLDER/MH_01_easy.bag" />
+    <arg name="nowait" default="false" />
 
     <node name="rvizvisualisation" pkg="rviz" type="rviz" output="log"
         args="-d $(find vins)/config/vins_rviz_config.rviz" />
@@ -14,5 +15,5 @@
     </node>
 
     <node name="rosbag_play" pkg="rosbag" type="play" output="screen" args="$(arg bag_path)"
-        required="true" />
+    required="$(arg nowait)" />
 </launch>
