@@ -22,9 +22,7 @@
 #include <csignal>
 #include <cstdio>
 #include <eigen3/Eigen/Dense>
-#include <iostream>
 #include <opencv2/opencv.hpp>
-#include <queue>
 
 using namespace std;
 using namespace camodocal;
@@ -38,7 +36,7 @@ void reduceVector(vector<int> &v, vector<uchar> status);
 
 class FeatureTracker {
  public:
-  FeatureTracker(Parameters &params);
+  explicit FeatureTracker(Parameters &params);
   map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> trackImage(
       double _cur_time, const cv::Mat &_img, const cv::Mat &_img1 = cv::Mat());
   void readIntrinsicParameter(const vector<string> &calib_file);
@@ -50,8 +48,8 @@ class FeatureTracker {
   void setMask();
   void showUndistortion(const string &name);
   void rejectWithF();
-  vector<cv::Point2f> undistortedPts(vector<cv::Point2f> &pts,
-                                     camodocal::CameraPtr cam);
+  static vector<cv::Point2f> undistortedPts(vector<cv::Point2f> &pts,
+                                            const camodocal::CameraPtr &cam);
   vector<cv::Point2f> ptsVelocity(vector<int> &ids, vector<cv::Point2f> &pts,
                                   map<int, cv::Point2f> &cur_id_pts,
                                   map<int, cv::Point2f> &prev_id_pts);
@@ -59,33 +57,33 @@ class FeatureTracker {
                  vector<int> &curLeftIds, vector<cv::Point2f> &curLeftPts,
                  vector<cv::Point2f> &curRightPts,
                  map<int, cv::Point2f> &prevLeftPtsMap);
-  bool inBorder(const cv::Point2f &pt);
-  double distance(cv::Point2f &pt1, cv::Point2f &pt2);
+  bool inBorder(const cv::Point2f &pt) const;
+  static double distance(const cv::Point2f &pt1, const cv::Point2f &pt2);
 
   Parameters &params;
 
   int row, col;
-  cv::Mat imTrack;
-  cv::Mat mask;
-  cv::Mat fisheye_mask;
-  cv::Mat prev_img, cur_img;
-  vector<cv::Point2f> n_pts;
-  vector<cv::Point2f> predict_pts;
-  vector<cv::Point2f> predict_pts_debug;
-  vector<cv::Point2f> prev_pts, cur_pts, cur_right_pts;
-  vector<cv::Point2f> prev_un_pts, cur_un_pts, cur_un_right_pts;
-  vector<cv::Point2f> pts_velocity, right_pts_velocity;
-  vector<int> ids, ids_right;
-  vector<int> track_cnt;
-  map<int, cv::Point2f> cur_un_pts_map, prev_un_pts_map;
-  map<int, cv::Point2f> cur_un_right_pts_map, prev_un_right_pts_map;
-  map<int, cv::Point2f> prevLeftPtsMap;
-  vector<camodocal::CameraPtr> m_camera;
-  double cur_time;
-  double prev_time;
-  bool stereo_cam;
-  int n_id;
-  bool hasPrediction;
+  cv::Mat im_track_;
+  cv::Mat mask_;
+  cv::Mat fisheye_mask_;
+  cv::Mat prev_img_, cur_img_;
+  vector<cv::Point2f> n_pts_;
+  vector<cv::Point2f> predict_pts_;
+  vector<cv::Point2f> predict_pts_debug_;
+  vector<cv::Point2f> prev_pts_, cur_pts_, cur_right_pts_;
+  vector<cv::Point2f> prev_un_pts_, cur_un_pts_, cur_un_right_pts_;
+  vector<cv::Point2f> pts_velocity_, right_pts_velocity_;
+  vector<int> ids_, ids_right_;
+  vector<int> track_cnt_;
+  map<int, cv::Point2f> cur_un_pts_map_, prev_un_pts_map_;
+  map<int, cv::Point2f> cur_un_right_pts_map_, prev_un_right_pts_map_;
+  map<int, cv::Point2f> prev_left_pts_map_;
+  vector<camodocal::CameraPtr> m_camera_;
+  double cur_time_;
+  double prev_time_;
+  bool stereo_cam_;
+  int n_id_;
+  bool has_prediction_;
 };
 
 }  // namespace vins::estimator
