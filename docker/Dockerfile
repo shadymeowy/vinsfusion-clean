@@ -1,4 +1,4 @@
-FROM osrf/ros:noetic-desktop
+FROM ros:noetic-perception
 
 # Set environment variables
 ENV TERM xterm
