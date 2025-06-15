@@ -4,6 +4,7 @@
 #include <vins_estimator/featureTracker/feature_tracker.h>
 
 #include <Eigen/Dense>
+#include <msgpack/adaptor/define_decl.hpp>
 #include <opencv2/opencv.hpp>
 #include <msgpack.hpp>
 
@@ -28,7 +29,7 @@ struct FeatureTrackerMethodLog {
   std::map<int, std::vector<std::pair<int, std::vector<double>>>> track_output;
   std::string track_image_path;
 
-  MSGPACK_DEFINE(call_id, method_name, timestamp, image0_path, image1_path,
+  MSGPACK_DEFINE_MAP(call_id, method_name, timestamp, image0_path, image1_path,
                  calib_files, predict_pts, remove_outlier_ids, track_output,
                  track_image_path);
 };

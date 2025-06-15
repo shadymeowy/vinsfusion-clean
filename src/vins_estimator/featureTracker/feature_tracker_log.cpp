@@ -108,21 +108,21 @@ void FeatureTrackerLogger::saveLog(const FeatureTrackerMethodLog &log) {
 
 std::string FeatureTrackerLogger::formatLogPath(int call_id) const {
   char buf[256];
-  snprintf(buf, sizeof(buf), "%s_%05d.msgpack", log_prefix_.c_str(), call_id);
+  snprintf(buf, sizeof(buf), "/tmp/trackerlog/%s_%05d.msgpack", log_prefix_.c_str(), call_id);
   return std::string(buf);
 }
 
 std::string FeatureTrackerLogger::formatImagePath(int call_id,
                                                   int img_idx) const {
   char buf[256];
-  snprintf(buf, sizeof(buf), "%s_%05d_img%d.png", log_prefix_.c_str(), call_id,
+  snprintf(buf, sizeof(buf), "/tmp/trackerlog/%s_%05d_img%d.png", log_prefix_.c_str(), call_id,
            img_idx);
   return std::string(buf);
 }
 
 std::string FeatureTrackerLogger::formatTrackImagePath(int call_id) const {
   char buf[256];
-  snprintf(buf, sizeof(buf), "%s_%05d_track.png", log_prefix_.c_str(), call_id);
+  snprintf(buf, sizeof(buf), "/tmp/trackerlog/%s_%05d_track.png", log_prefix_.c_str(), call_id);
   return std::string(buf);
 }
 
