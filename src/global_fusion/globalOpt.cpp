@@ -10,12 +10,11 @@
  * Author: Qin Tong (qintonguav@gmail.com)
  *******************************************************/
 
+#include <ceres/ceres.h>
+#include <ceres/manifold.h>
 #include <global_fusion/Factors.h>
 #include <global_fusion/globalOpt.h>
 #include <ros/ros.h>
-
-#include <ceres/ceres.h>
-#include <ceres/manifold.h>
 
 namespace vins::global_fusion {
 
@@ -108,8 +107,7 @@ void GlobalOptimization::optimize() {
       ceres::Solver::Summary summary;
       ceres::LossFunction *loss_function;
       loss_function = new ceres::HuberLoss(1.0);
-      ceres::Manifold *manifold =
-          new ceres::QuaternionManifold();
+      ceres::Manifold *manifold = new ceres::QuaternionManifold();
 
       // add param
       mPoseMap.lock();

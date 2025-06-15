@@ -424,7 +424,7 @@ void CameraCalibration::optimize(CameraPtr &camera, std::vector<cv::Mat> &rvecs,
         new ceres::EigenQuaternionManifold();
 
     problem.SetManifold(transformVec.at(i).rotationData(),
-                                quaternionParameterization);
+                        quaternionParameterization);
   }
 
   std::cout << "begin ceres" << std::endl;

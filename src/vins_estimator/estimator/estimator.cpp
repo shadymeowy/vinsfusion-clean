@@ -923,8 +923,7 @@ void Estimator::optimization() {
   // loss_function = new ceres::CauchyLoss(1.0 / params.focal_length);
   // ceres::LossFunction* loss_function = new ceres::HuberLoss(1.0);
   for (int i = 0; i < frame_count + 1; i++) {
-    ceres::Manifold *manifold =
-        new PoseManifold();
+    ceres::Manifold *manifold = new PoseManifold();
     problem.AddParameterBlock(para_Pose[i], SIZE_POSE);
     problem.SetManifold(para_Pose[i], manifold);
     if (params.use_imu)
@@ -933,8 +932,7 @@ void Estimator::optimization() {
   if (!params.use_imu) problem.SetParameterBlockConstant(para_Pose[0]);
 
   for (int i = 0; i < params.num_of_cam; i++) {
-    ceres::Manifold *manifold =
-        new PoseManifold();
+    ceres::Manifold *manifold = new PoseManifold();
     problem.AddParameterBlock(para_Ex_Pose[i], SIZE_POSE);
     problem.SetManifold(para_Ex_Pose[i], manifold);
     if ((params.estimate_extrinsic && frame_count == WINDOW_SIZE &&

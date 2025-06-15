@@ -228,8 +228,7 @@ bool GlobalSFM::construct(int frame_num, Quaterniond *q, Vector3d *T, int l,
   */
   // full BA
   ceres::Problem problem;
-  ceres::Manifold *manifold =
-      new ceres::QuaternionManifold();
+  ceres::Manifold *manifold = new ceres::QuaternionManifold();
   // cout << " begin full BA " << endl;
   for (int i = 0; i < frame_num; i++) {
     // double array for ceres
