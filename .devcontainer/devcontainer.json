@@ -12,12 +12,15 @@
   ],
   "mounts": [
     "source=${localEnv:HOME}/.ws/vinsfusion,target=/root/catkin_ws,type=bind",
-    "source=${localWorkspaceFolder},target=/root/catkin_ws/src/VINS-Fusion,type=bind",
-    "source=/run/media/tdemirdal/tb,target=/datasets,type=bind"
+    "source=${localWorkspaceFolder},target=/root/catkin_ws/src/VINS-Fusion,type=bind"
   ],
   "workspaceFolder": "/root/catkin_ws/src/VINS-Fusion",
-  "extensions": [
-    "llvm-vs-code-extensions.vscode-clangd"
-  ],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "llvm-vs-code-extensions.vscode-clangd"
+      ]
+    }
+  },
   "postStartCommand": "cd /root/catkin_ws"
 }
