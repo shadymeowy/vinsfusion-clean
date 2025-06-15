@@ -85,3 +85,9 @@ RUN update-alternatives --install \
     /usr/bin/clangd \
     clangd \
     /usr/bin/clangd-18 100
+
+# Install msgpack
+RUN apt-get update && \
+    apt-get install -y \
+    libmsgpack-dev && \
+    rm -rf /var/lib/apt/lists/*
