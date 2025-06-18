@@ -37,6 +37,12 @@ After a successful build, you must source the setup file to correctly configure 
 source devel/setup.bash
 ```
 
+After building the workspace, you can install the required Python packages. This is done using the `uv` tool, which is a part of the Docker image. Run the following command to create a virtual environment and the necessary Python packages:
+
+```bash
+uv venv --seed --python=3.12 /root/catkin_ws/.venv
+```
+
 ## Running
 To run the VINS-Fusion node, you can use the following command:
 
@@ -50,7 +56,7 @@ roslaunch vins vins.launch bag_path:=/bagfiles/MH_01_easy.bag config_path:=/root
 ```
 
 ## Formatting and Linting
-To ensure code quality and consistency, this project uses `clang-format` for formatting and `clang-tidy` for linting.
+To ensure code quality and consistency, this project uses `clang-format` for formatting.
 
 Before running these tools, make sure you have in the correct directory where the config files are located:
 
@@ -62,22 +68,6 @@ To format all the files in project, use the following command:
 
 ```bash
 find . -type f \( -name "*.c" -o -name "*.cpp" -o -name "*.h" -o -name "*.cc" \) -exec clang-format -i {} +
-```
-
-While formatting is quite fast, linting can take a bit longer.
-You can run `clang-tidy` on a specific file by providing the file path as an argument:
-
-```bash
-clang-tidy -p /root/catkin_ws/build/vins/ --header-filter /root/catkin_ws/src/VINS-Fusion/src/feature_tracker.h /catkin_ws/src/VINS-Fusion/src/feature_tracker.cpp
-```
-
-It is also possible to run `clang-tidy` on all files in the project using the following commands:
-
-```bash
-run-clang-tidy -config-file /root/catkin_ws/src/VINS-Fusion/.clang-tidy -p /root/catkin_ws/build/vins/ -header-filter='.*' -fix
-run-clang-tidy -config-file /root/catkin_ws/src/VINS-Fusion/.clang-tidy -p /root/catkin_ws/build/global_fusion/ -header-filter='.*' -fix
-run-clang-tidy -config-file /root/catkin_ws/src/VINS-Fusion/.clang-tidy -p /root/catkin_ws/build/loop_fusion/ -header-filter='.*' -fix
-run-clang-tidy -config-file /root/catkin_ws/src/VINS-Fusion/.clang-tidy -p /root/catkin_ws/build/camera_models/ -header-filter='.*' -fix
 ```
 
 # VINS-Fusion
