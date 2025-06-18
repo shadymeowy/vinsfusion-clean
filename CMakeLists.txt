@@ -87,10 +87,16 @@ add_executable(
   src/camodocal/camera_models/ScaramuzzaCamera.cc
 )
 
+set_target_properties(vins_node PROPERTIES
+  BUILD_WITH_INSTALL_RPATH TRUE
+  INSTALL_RPATH "/root/catkin_ws/src/VINS-Fusion/pyloader"
+)
+
 target_link_libraries(vins_node
   ${catkin_LIBRARIES}
   ${OpenCV_LIBS}
   ${CERES_LIBRARIES}
+  "/root/catkin_ws/src/VINS-Fusion/pyloader/libpyloader.so"
 )
 
 add_executable(
