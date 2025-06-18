@@ -97,11 +97,11 @@ target_link_libraries(vins_estimator_lib
   ${OpenCV_LIBS}
   ${CERES_LIBRARIES}
   camodocal
-  "/root/catkin_ws/src/VINS-Fusion/pyloader/libpyloader.so"
+  "/root/catkin_ws/src/VINS-Fusion/pyloader/build/libpyloader.so"
 )
 set_target_properties(vins_estimator_lib PROPERTIES
   BUILD_WITH_INSTALL_RPATH TRUE
-  INSTALL_RPATH "/root/catkin_ws/src/VINS-Fusion/pyloader"
+  INSTALL_RPATH "/root/catkin_ws/src/VINS-Fusion/pyloader/build/"
 )
 
 ## Create a shared library for global fusion
