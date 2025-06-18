@@ -91,3 +91,7 @@ RUN apt-get update && \
     apt-get install -y \
     libmsgpack-dev && \
     rm -rf /var/lib/apt/lists/*
+
+# Install uv and python from distroless image
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+RUN uv python install 3.12
