@@ -1,0 +1,7 @@
+roscore
+rviz
+./devel/.private/vins/lib/vins/vins_node _config_path:=/datasets/m3ed-bags/config/m3ed_mono_imu_config.yaml
+./devel/.private/vins/lib/vins/loop_fusion_node _config_path:=/datasets/m3ed-bags/config/m3ed_mono_imu_config.yaml
+rosbag play /datasets/m3ed-bags/rosbag/spot_indoor_building_loop.bag
+
+roslaunch vins vins.launch bag_path:=/datasets/m3ed-bags/rosbag/spot_indoor_building_loop.bag config_path:=/datasets/m3ed-bags/config/m3ed_mono_imu_config.yaml

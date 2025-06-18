@@ -1,0 +1,3 @@
+cmake -S . -B build
+cmake --build build -j
+LD_LIBRARY_PATH=$HOME/.venv/lib/python3.12/site-packages/nvidia/cublas/lib/:$HOME/.venv/lib/python3.12/site-packages/nvidia/curand/lib/:$HOME/.venv/lib/python3.12/site-packages/nvidia/cufft/lib/:$HOME/.venv/lib/python3.12/site-packages/nvidia/cuda_runtime/lib/:$HOME/.venv/lib/python3.12/site-packages/nvidia/cudnn/lib/:$HOME/.venv/lib/python3.12/site-packages/nvidia/cuda_nvrtc/lib/ ./build/lightglue_example
