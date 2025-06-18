@@ -267,6 +267,8 @@ To test other EuRoC modes, keep `bag_path` the same and change only `config_path
 
 The remainder of this file is preserved from the original upstream-style README for reference. It contains older build/runtime guidance and does not reflect the container-first workflow above.
 
+=======
+>>>>>>> 1dd8534 (add uv and python description to readme)
 # VINS-Fusion
 ## An optimization-based multi-sensor state estimator
 
