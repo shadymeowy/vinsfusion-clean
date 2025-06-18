@@ -18,4 +18,4 @@ podman run \
     -v "$1:/datasets/" \
     ros:vins-fusion \
     /bin/bash -c \
-    "cd /root/catkin_ws/; source devel/setup.bash; bash"
+    "cd /root/catkin_ws/; source devel/setup.bash; source .venv/bin/activate; bash"
