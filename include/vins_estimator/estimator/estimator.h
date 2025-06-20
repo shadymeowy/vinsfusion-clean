@@ -22,7 +22,7 @@
 #include <vins_estimator/factor/projectionOneFrameTwoCamFactor.h>
 #include <vins_estimator/factor/projectionTwoFrameOneCamFactor.h>
 #include <vins_estimator/factor/projectionTwoFrameTwoCamFactor.h>
-#include <vins_estimator/featureTracker/feature_tracker.h>
+#include <vins_estimator/featureTracker/feature_tracker_mono.h>
 #include <vins_estimator/initial/initial_alignment.h>
 #include <vins_estimator/initial/initial_ex_rotation.h>
 #include <vins_estimator/initial/initial_sfm.h>
@@ -113,7 +113,7 @@ class Estimator {
   std::thread trackThread;
   std::thread processThread;
 
-  FeatureTracker featureTracker;
+  FeatureTrackerMono featureTracker;
 
   SolverFlag solver_flag;
   MarginalizationFlag marginalization_flag;
