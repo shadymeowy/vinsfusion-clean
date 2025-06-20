@@ -22,7 +22,7 @@
 #include <vins_estimator/factor/projectionOneFrameTwoCamFactor.h>
 #include <vins_estimator/factor/projectionTwoFrameOneCamFactor.h>
 #include <vins_estimator/factor/projectionTwoFrameTwoCamFactor.h>
-#include <vins_estimator/featureTracker/feature_tracker.h>
+#include <vins_estimator/featureTracker/feature_tracker_mono.h>
 #include <vins_estimator/initial/initial_alignment.h>
 #include <vins_estimator/initial/initial_ex_rotation.h>
 #include <vins_estimator/initial/initial_sfm.h>
@@ -42,7 +42,7 @@ namespace vins::estimator {
 
 class Estimator {
  public:
-  Estimator(Parameters &params);
+  explicit Estimator(Parameters &params);
   ~Estimator();
   void setParameter();
 
@@ -59,7 +59,7 @@ class Estimator {
                   const Vector3d &angular_velocity);
   void processImage(
       const map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> &image,
-      const double header);
+      double header);
   void processMeasurements();
   void changeSensorType(int use_imu, int use_stereo);
 
@@ -112,7 +112,7 @@ class Estimator {
   std::thread trackThread;
   std::thread processThread;
 
-  FeatureTracker featureTracker;
+  FeatureTrackerMono featureTracker;
 
   SolverFlag solver_flag;
   MarginalizationFlag marginalization_flag;
