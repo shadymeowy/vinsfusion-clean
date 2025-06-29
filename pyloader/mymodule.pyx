@@ -15,6 +15,7 @@ a = torch.zeros(10, dtype=torch.float32)
 a = a.cuda()
 print(a)
 print("Threadid1:", syscall(186))
+print(np.__version__, np.__file__)
 
 cdef public void process_image(float* buf, int length):
     cdef int i
@@ -68,7 +69,7 @@ cdef public int track_klt_cy(const unsigned char *img, int width, int height,
     
     # track the image
     try:
-        x, y, ids, cnt = tracker.track_image(cur_img_, flow_back, max_cnt, min_dist)
+        x, y, ids, cnt = tracker.track_image(cur_img_, max_cnt=max_cnt)
     except Exception as e:
         import traceback
         traceback.print_exc()
@@ -85,6 +86,6 @@ cdef public int track_klt_cy(const unsigned char *img, int width, int height,
 
 import sys
 sys.path.append("/root/catkin_ws/src/VINS-Fusion/pyloader/")
-from kltpy import KLTTracker as Tracker
+from tracker import Tracker
 
 tracker = Tracker()
