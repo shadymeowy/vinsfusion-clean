@@ -279,17 +279,19 @@ class Tracker:
         selected_ids[mask_new] = np.arange(self.n_id, self.n_id + np.sum(mask_new))
         self.n_id += np.sum(mask_new)
         selected_cnt = cur_cnt[sidx] + 1
-        # selected_mcnt = cur_mcnt[sidx]
+        selected_mcnt = cur_mcnt[sidx]
         print(f"Selected {len(sidx)} keypoints with {np.sum(mask_new)} new IDs.")
 
         # Build ID and count arrays for all keypoints
-        ids_all = np.full(len(cur_kpts), -1, dtype=np.int32)
-        cnt_all = np.zeros(len(cur_kpts), dtype=np.int32)
+        # ids_all = np.full(len(cur_kpts), -1, dtype=np.int32)
+        # cnt_all = np.zeros(len(cur_kpts), dtype=np.int32)
         # mcnt_all = np.zeros(len(cur_kpts), dtype=np.int32)
+        ids_all = cur_ids.copy()
+        cnt_all = cur_cnt.copy()
+        mcnt_all = cur_mcnt.copy()
         ids_all[sidx] = selected_ids
         cnt_all[sidx] = selected_cnt
-        # mcnt_all[sidx] = selected_mcnt
-        mcnt_all = cur_mcnt
+        mcnt_all[sidx] = selected_mcnt
 
         # Update tracker state
         self.prev_feats = {
