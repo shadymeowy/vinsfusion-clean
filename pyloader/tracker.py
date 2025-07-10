@@ -1,10 +1,11 @@
 import numpy as np
 import cv2
 import torch
-from lightglue import SuperPoint, LightGlue, ALIKED, DISK
+from lightglue import SuperPoint, LightGlue, ALIKED
 from numba import njit
 
 from adaptivenms import square_covering_adaptive_nms
+
 
 # Camera parameters
 K = np.array(
@@ -66,15 +67,18 @@ class Tracker:
         device="cuda" if torch.cuda.is_available() else "cpu",
         nms_type="adaptive",  # 'adaptive', 'numba', 'none'
         min_dist=30.0,
-        use_fmatrix_filter=False,
-        min_track_count=2,
+        use_fmatrix_filter=True,
+        min_track_count=1,
         use_clahe=True,
+        downscale=1,
+        mode="aliked",
     ):
         self.device = device
         self.nms_type = nms_type
         self.min_dist = min_dist
         self.use_fmatrix_filter = use_fmatrix_filter
         self.min_track_count = min_track_count
+        self.downscale = downscale
 
         if use_clahe:
             self.clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
@@ -84,15 +88,26 @@ class Tracker:
         self.prev_feats = None
         self.ids = np.array([], dtype=np.int32)
         self.track_cnt = np.array([], dtype=np.int32)
+        self.match_cnt = np.array([], dtype=np.int32)
         self.n_id = 0
 
-        self.detector = ALIKED(model_name="aliked-n32").eval().to(self.device)
-        # self.detector = SuperPoint().eval().to(self.device)
-        self.matcher = LightGlue(features="aliked").eval().to(self.device)
+        if mode == "superpoint":
+            self.detector = SuperPoint(max_num_keypoints=1024)
+            self.matcher = LightGlue(features="superpoint")
+        elif mode == "aliked":
+            self.detector = ALIKED(model_name="aliked-n16rot", max_num_keypoints=1024)
+            self.matcher = LightGlue(features="aliked")
+        else:
+            raise ValueError(f"Unsupported mode: {mode}")
+
+        self.detector = self.detector.to(self.device)
+        self.detector.eval()
+        self.matcher = self.matcher.to(self.device)
+        self.matcher.eval()
 
         self.K = K
         self.D = D
-        self.new_K, _ = cv2.getOptimalNewCameraMatrix(K, D, img_size, 1)
+        self.new_K, _ = cv2.getOptimalNewCameraMatrix(K, D, img_size, 0)
         self.map1, self.map2 = cv2.initUndistortRectifyMap(
             K, D, None, self.new_K, img_size, cv2.CV_32FC1
         )
@@ -122,7 +137,7 @@ class Tracker:
     def _filter_fundamental_matrix(self, prev_pts, cur_pts):
         if len(prev_pts) < 8:
             return np.ones(len(prev_pts), dtype=bool)
-        F, mask = cv2.findFundamentalMat(prev_pts, cur_pts, cv2.FM_RANSAC, 5.0, 0.99)
+        F, mask = cv2.findFundamentalMat(prev_pts, cur_pts, cv2.FM_RANSAC, 1.0, 0.99)
         if mask is None:
             return np.ones(len(prev_pts), dtype=bool)
         if np.sum(mask) < len(prev_pts) * 0.5:
@@ -144,6 +159,16 @@ class Tracker:
         undist_img = cv2.remap(
             cur_img_gray, self.map1, self.map2, interpolation=cv2.INTER_LINEAR
         )
+
+        # Downscale if needed
+        if self.downscale > 1:
+            h, w = undist_img.shape[:2]
+            new_size = (w // self.downscale, h // self.downscale)
+            undist_img = cv2.resize(
+                undist_img, new_size, interpolation=cv2.INTER_LINEAR
+            )
+
+        # Apply CLAHE if enabled
         if self.clahe:
             undist_img = self.clahe.apply(undist_img)
 
@@ -162,6 +187,7 @@ class Tracker:
 
         cur_ids = np.full(len(cur_kpts), -1, dtype=np.int32)
         cur_cnt = np.zeros(len(cur_kpts), dtype=np.int32)
+        cur_mcnt = np.zeros(len(cur_kpts), dtype=np.int32)
 
         if self.prev_feats is not None:
             data = {
@@ -181,6 +207,8 @@ class Tracker:
             valid = matches0 >= 0
             idx_prev_all = np.where(valid)[0]
             idx_cur_all = matches0[valid]
+
+            print(f"Matched total of {len(idx_prev_all)}")
 
             if self.use_fmatrix_filter and len(idx_prev_all) >= 8:
                 prev_pts = self.prev_feats["keypoints"][0, idx_prev_all].cpu().numpy()
@@ -202,15 +230,18 @@ class Tracker:
             # Assign IDs and counts to matched keypoints
             cur_ids[idx_cur] = self.ids[idx_prev]
             cur_cnt[idx_cur] = self.track_cnt[idx_prev]
+            cur_mcnt[idx_cur] = self.match_cnt[idx_prev] + 1
 
         # Compute responses
         responses = np.zeros(len(cur_kpts), dtype=np.float32)
         if np.any(cur_cnt > 0):
-            responses += 1e2 * (cur_cnt / (np.max(cur_cnt) + 1e-6))
+            responses += 1e3 * (cur_cnt / (np.max(cur_cnt) + 1e-6))
+        if np.any(cur_mcnt > 0):
+            responses += 1e2 * (cur_mcnt / (np.max(cur_mcnt) + 1e-6))
         if self.prev_feats is not None and len(idx_cur) > 0:
             matching_scores_filtered = matching_scores0[idx_prev]
-            mscores_norm = 1.0 - (
-                matching_scores_filtered / (np.max(matching_scores_filtered) + 1e-6)
+            mscores_norm = matching_scores_filtered / (
+                np.max(matching_scores_filtered) + 1e-6
             )
             responses[idx_cur] += 1e1 * mscores_norm
         responses += 1e0 * (cur_scores / (np.max(cur_scores) + 1e-6))
@@ -248,12 +279,17 @@ class Tracker:
         selected_ids[mask_new] = np.arange(self.n_id, self.n_id + np.sum(mask_new))
         self.n_id += np.sum(mask_new)
         selected_cnt = cur_cnt[sidx] + 1
+        # selected_mcnt = cur_mcnt[sidx]
+        print(f"Selected {len(sidx)} keypoints with {np.sum(mask_new)} new IDs.")
 
         # Build ID and count arrays for all keypoints
         ids_all = np.full(len(cur_kpts), -1, dtype=np.int32)
         cnt_all = np.zeros(len(cur_kpts), dtype=np.int32)
+        # mcnt_all = np.zeros(len(cur_kpts), dtype=np.int32)
         ids_all[sidx] = selected_ids
         cnt_all[sidx] = selected_cnt
+        # mcnt_all[sidx] = selected_mcnt
+        mcnt_all = cur_mcnt
 
         # Update tracker state
         self.prev_feats = {
@@ -262,10 +298,13 @@ class Tracker:
         }
         self.ids = ids_all
         self.track_cnt = cnt_all
+        self.match_cnt = mcnt_all
 
         # Output: apply min track count
         mask_output = cnt_all[sidx] >= self.min_track_count
         selected_kpts = cur_kpts[sidx, :][mask_output]
+        # Scale back to original size
+        selected_kpts *= self.downscale
         pts_dist = self.redistort_points(selected_kpts)
         x_out = pts_dist[:, 0]
         y_out = pts_dist[:, 1]
