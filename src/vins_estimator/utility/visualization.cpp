@@ -165,6 +165,14 @@ void pubOdometry(const Estimator &estimator, const std_msgs::Header &header) {
     printf("time: %f, t: %f %f %f q: %f %f %f %f \n", header.stamp.toSec(),
            tmp_T.x(), tmp_T.y(), tmp_T.z(), tmp_Q.w(), tmp_Q.x(), tmp_Q.y(),
            tmp_Q.z());
+
+    // check for termination time
+    if (estimator.params.terminate_t > 0 &&
+        header.stamp.toSec() > estimator.params.terminate_t) {
+      printf("VINS_TERMINATE_TIME reached, exiting...\n");
+      ros::shutdown();
+      exit(0);
+    }
   }
 }
 

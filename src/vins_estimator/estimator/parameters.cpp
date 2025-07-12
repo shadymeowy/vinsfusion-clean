@@ -140,6 +140,14 @@ void Parameters::read_from_file(std::string config_file) {
   load_previous_pose_graph = fsSettings["load_previous_pose_graph"];
 
   fsSettings.release();
+
+  char *env_terminate_t_str = getenv("VINS_TERMINATE_TIME");
+  if (env_terminate_t_str != nullptr) {
+    terminate_t = atof(env_terminate_t_str);
+  } else {
+    // default value, no termination time set
+    terminate_t = -1.0;
+  }
 }
 
 }  // namespace vins::estimator

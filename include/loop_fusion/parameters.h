@@ -77,6 +77,8 @@ struct Parameters {
   int save_image;
   int load_previous_pose_graph;
 
+  float terminate_t;
+
   void read_from_file(std::string config_file);
 };
 

@@ -8,7 +8,7 @@
         args="-d $(find vins)/config/vins_rviz_config.rviz"
         if="$(arg rviz)" />
 
-    <node name="vins_estimator" pkg="vins" type="vins_node" output="screen">
+    <node name="vins_estimator" pkg="vins" type="vins_node" output="screen" required="true">
         <param name="config_path" value="$(arg config_path)" />
     </node>
 
