@@ -391,6 +391,11 @@ void Estimator::processImage(
     // printf("non-keyframe\n");
   }
 
+  // save the feature points to feature_debug_path
+  if (params.feature_debug) {
+    f_manager.logFeature(image, params.feature_debug_path);
+  }
+
   ROS_DEBUG("%s", marginalization_flag ? "Non-keyframe" : "Keyframe");
   ROS_DEBUG("Solving %d", frame_count);
   ROS_DEBUG("number of feature: %d", f_manager.getFeatureCount());
@@ -500,6 +505,11 @@ void Estimator::processImage(
     optimization();
     set<int> removeIndex;
     outliersRejection(removeIndex);
+
+    if (params.feature_debug) {
+      f_manager.logOutlier(removeIndex, params.feature_debug_path);
+    }
+
     f_manager.removeOutlier(removeIndex);
     if (!params.multiple_thread) {
       featureTracker.removeOutliers(removeIndex);

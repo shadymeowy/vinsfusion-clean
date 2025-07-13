@@ -10,11 +10,13 @@
 
 #include <vins_estimator/estimator/parameters.h>
 
+#include <fstream>
+
 namespace vins::estimator {
 
-void Parameters::read_from_file(std::string config_file) {
+void Parameters::read_from_file(const std::string &config_file) {
   FILE *fh = fopen(config_file.c_str(), "r");
-  if (fh == NULL) {
+  if (fh == nullptr) {
     ROS_WARN("config_file doesn't exist; wrong config_file path");
     ROS_BREAK();
     return;
@@ -55,15 +57,34 @@ void Parameters::read_from_file(std::string config_file) {
 
   fsSettings["output_path"] >> output_folder;
   vins_result_path = output_folder + "/vio.csv";
+  feature_debug_path = output_folder + "/feature_debug.csv";
+
   std::cout << "result path " << vins_result_path << std::endl;
   std::ofstream fout(vins_result_path, std::ios::out);
   fout.close();
 
+  std::cout << "feature debug path " << feature_debug_path << std::endl;
+  std::ofstream ffeature_debug(feature_debug_path, std::ios::out);
+  ffeature_debug.close();
+
+  // check for feature_debug bool, if not exist, set to false
+  if (!fsSettings["feature_debug"].empty()) {
+    fsSettings["feature_debug"] >> feature_debug;
+    if (feature_debug) {
+      std::cout << "feature debug enabled" << std::endl;
+    } else {
+      std::cout << "feature debug disabled" << std::endl;
+    }
+  } else {
+    feature_debug = 0;
+    std::cout << "feature debug not set, default to disabled" << std::endl;
+  }
+
   estimate_extrinsic = fsSettings["estimate_extrinsic"];
   if (estimate_extrinsic == 2) {
     ROS_WARN("have no prior about extrinsic param, calibrate extrinsic param");
-    ric.push_back(Eigen::Matrix3d::Identity());
-    tic.push_back(Eigen::Vector3d::Zero());
+    ric.emplace_back(Eigen::Matrix3d::Identity());
+    tic.emplace_back(Eigen::Vector3d::Zero());
     ex_calib_result_path = output_folder + "/extrinsic_parameter.csv";
   } else {
     if (estimate_extrinsic == 1) {
@@ -76,8 +97,8 @@ void Parameters::read_from_file(std::string config_file) {
     fsSettings["body_T_cam0"] >> cv_T;
     Eigen::Matrix4d T;
     cv::cv2eigen(cv_T, T);
-    ric.push_back(T.block<3, 3>(0, 0));
-    tic.push_back(T.block<3, 1>(0, 3));
+    ric.emplace_back(T.block<3, 3>(0, 0));
+    tic.emplace_back(T.block<3, 1>(0, 3));
   }
 
   num_of_cam = fsSettings["num_of_cam"];
@@ -108,8 +129,8 @@ void Parameters::read_from_file(std::string config_file) {
     fsSettings["body_T_cam1"] >> cv_T;
     Eigen::Matrix4d T;
     cv::cv2eigen(cv_T, T);
-    ric.push_back(T.block<3, 3>(0, 0));
-    tic.push_back(T.block<3, 1>(0, 3));
+    ric.emplace_back(T.block<3, 3>(0, 0));
+    tic.emplace_back(T.block<3, 1>(0, 3));
   }
 
   init_depth = 5.0;

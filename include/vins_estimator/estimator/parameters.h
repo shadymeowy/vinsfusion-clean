@@ -14,8 +14,6 @@
 #include <vins_estimator/utility/utility.h>
 
 #include <eigen3/Eigen/Dense>
-#include <fstream>
-#include <map>
 #include <opencv2/core/eigen.hpp>
 #include <opencv2/opencv.hpp>
 #include <vector>
@@ -71,7 +69,10 @@ struct Parameters {
 
   float terminate_t;
 
-  void read_from_file(std::string config_file);
+  int feature_debug;
+  std::string feature_debug_path;
+
+  void read_from_file(const std::string& config_file);
 };
 
 enum SIZE_PARAMETERIZATION {
