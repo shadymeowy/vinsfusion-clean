@@ -530,7 +530,7 @@ void FeatureManager::logFeature(
     const string &path) {
   std::ofstream output_file(path, std::ios::app);
 
-  output_file << "feature";
+  output_file << "feature\n";
   for (const auto &entry : image) {
     int map_key = entry.first;
     const auto &inner_vector = entry.second;
@@ -557,7 +557,7 @@ void FeatureManager::logFeature(
 void FeatureManager::logOutlier(const set<int> &outlierIndex, const string &path) {
   std::ofstream output_file(path, std::ios::app);
 
-  output_file << "outlier";
+  output_file << "outlier\n";
 
   for (const auto &index : outlierIndex) {
     output_file << index << ",";
