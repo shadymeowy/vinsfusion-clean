@@ -68,7 +68,7 @@ class FeaturePerId {
         estimated_depth(-1.0),
         solve_flag(0) {}
 
-  int endFrame();
+  int endFrame() const;
 
   const int feature_id;
   int start_frame;
@@ -98,19 +98,28 @@ class FeatureManager {
   VectorXd getDepthVector();
   void triangulate(int frameCnt, Vector3d Ps[], Matrix3d Rs[], Vector3d tic[],
                    Matrix3d ric[]);
-  void triangulatePoint(Eigen::Matrix<double, 3, 4> &Pose0,
-                        Eigen::Matrix<double, 3, 4> &Pose1,
-                        Eigen::Vector2d &point0, Eigen::Vector2d &point1,
-                        Eigen::Vector3d &point_3d);
+  static void triangulatePoint(Eigen::Matrix<double, 3, 4> &Pose0,
+                               Eigen::Matrix<double, 3, 4> &Pose1,
+                               Eigen::Vector2d &point0, Eigen::Vector2d &point1,
+                               Eigen::Vector3d &point_3d);
   void initFramePoseByPnP(int frameCnt, Vector3d Ps[], Matrix3d Rs[],
                           Vector3d tic[], Matrix3d ric[]);
-  bool solvePoseByPnP(Eigen::Matrix3d &R_initial, Eigen::Vector3d &P_initial,
-                      vector<cv::Point2f> &pts2D, vector<cv::Point3f> &pts3D);
-  void removeBackShiftDepth(Eigen::Matrix3d marg_R, Eigen::Vector3d marg_P,
-                            Eigen::Matrix3d new_R, Eigen::Vector3d new_P);
+  static bool solvePoseByPnP(Eigen::Matrix3d &R_initial,
+                             Eigen::Vector3d &P_initial,
+                             vector<cv::Point2f> &pts2D,
+                             vector<cv::Point3f> &pts3D);
+  void removeBackShiftDepth(const Eigen::Matrix3d &marg_R,
+                            const Eigen::Vector3d &marg_P,
+                            Eigen::Matrix3d new_R,
+                            const Eigen::Vector3d &new_P);
   void removeBack();
   void removeFront(int frame_count);
   void removeOutlier(set<int> &outlierIndex);
+
+  static void logFeature(
+      const map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> &image,
+      const string &path);
+  static void logOutlier(const set<int> &outlierIndex, const string &path);
 
   list<FeaturePerId> feature;
   int last_track_num;
@@ -121,7 +130,8 @@ class FeatureManager {
   double last_average_parallax;
   int new_feature_num;
   int long_track_num;
-  double compensatedParallax2(const FeaturePerId &it_per_id, int frame_count);
+  static double compensatedParallax2(const FeaturePerId &it_per_id,
+                                     int frame_count);
   const Matrix3d *Rs;
   Matrix3d ric[2];
 };
