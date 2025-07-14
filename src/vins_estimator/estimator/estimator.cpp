@@ -511,10 +511,10 @@ void Estimator::processImage(
     }
 
     f_manager.removeOutlier(removeIndex);
-    if (!params.multiple_thread) {
-      featureTracker.removeOutliers(removeIndex);
-      predictPtsInNextFrame();
-    }
+    // if (!params.multiple_thread) {
+    //   featureTracker.removeOutliers(removeIndex);
+    //   predictPtsInNextFrame();
+    // }
 
     ROS_DEBUG("solver costs: %fms", t_solve.toc());
 
