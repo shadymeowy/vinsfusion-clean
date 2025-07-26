@@ -85,7 +85,7 @@ MarginalizationInfo::~MarginalizationInfo() {
 
   for (auto it = parameter_block_data.begin(); it != parameter_block_data.end();
        ++it)
-    delete it->second;
+    delete[] it->second;
 
   for (int i = 0; i < (int)factors.size(); i++) {
     delete[] factors[i]->raw_jacobians;
