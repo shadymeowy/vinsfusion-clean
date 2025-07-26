@@ -6,7 +6,8 @@ set(CMAKE_BUILD_TYPE "Release")
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -g")
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+cmake_policy(SET CMP0069 NEW)
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 
 ## Find required packages
 find_package(catkin REQUIRED COMPONENTS
@@ -57,79 +58,83 @@ catkin_package(
   DEPENDS OpenCV Ceres Eigen3
 )
 
-## Source files
-file(GLOB_RECURSE SRC_FILES_VINS_ESTIMATOR src/vins_estimator/*.cpp)
-file(GLOB_RECURSE SRC_FILES_GLOBAL_FUSION src/global_fusion/*.cpp)
-file(GLOB_RECURSE SRC_FILES_LOOP_FUSION src/loop_fusion/*.cpp)
-
-file(GLOB_RECURSE SRC_FILES_DBOW src/DBoW/*.cpp)
-file(GLOB_RECURSE SRC_FILES_DUTILS src/DUtils/*.cpp)
-file(GLOB_RECURSE SRC_FILES_DVISION src/DVision/*.cpp)
-
-file(GLOB_RECURSE SRC_FILES_GEOGRAPHICLIB src/GeographicLib/*.cpp)
-file(GLOB_RECURSE SRC_FILES_CAMODOCAL src/camodocal/*.cc)
-
-## Create a combined static library for DBoW, DUtils, DVision
-add_library(dvision_lib STATIC
-  ${SRC_FILES_DBOW}
-  ${SRC_FILES_DUTILS}
-  ${SRC_FILES_DVISION}
+## Create executables separately if needed
+add_executable(
+  vins_node
+  src/node/node_ros.cpp
+  src/vins_estimator/estimator/parameters.cpp
+  src/vins_estimator/estimator/estimator.cpp
+  src/vins_estimator/estimator/feature_manager.cpp
+  src/vins_estimator/factor/pose_local_parameterization.cpp
+  src/vins_estimator/factor/projectionTwoFrameOneCamFactor.cpp
+  src/vins_estimator/factor/projectionTwoFrameTwoCamFactor.cpp
+  src/vins_estimator/factor/projectionOneFrameTwoCamFactor.cpp
+  src/vins_estimator/factor/marginalization_factor.cpp
+  src/vins_estimator/utility/utility.cpp
+  src/vins_estimator/utility/visualization.cpp
+  src/vins_estimator/utility/CameraPoseVisualization.cpp
+  src/vins_estimator/initial/solve_5pts.cpp
+  src/vins_estimator/initial/initial_aligment.cpp
+  src/vins_estimator/initial/initial_sfm.cpp
+  src/vins_estimator/initial/initial_ex_rotation.cpp
+  src/vins_estimator/featureTracker/feature_tracker.cpp
+  src/camodocal/camera_models/Camera.cc
+  src/camodocal/camera_models/CameraFactory.cc
+  src/camodocal/camera_models/PinholeCamera.cc
+  src/camodocal/camera_models/PinholeFullCamera.cc
+  src/camodocal/camera_models/CataCamera.cc
+  src/camodocal/camera_models/EquidistantCamera.cc
+  src/camodocal/camera_models/ScaramuzzaCamera.cc
 )
 
-## Create a static library for GeographicLib
-add_library(geographiclib STATIC
-  ${SRC_FILES_GEOGRAPHICLIB}
-)
-
-## Create a static library for camodocal
-add_library(camodocal STATIC
-  ${SRC_FILES_CAMODOCAL}
-)
-
-target_link_libraries(camodocal
-  ${OpenCV_LIBS}
-)
-
-## Create a shared library for vins estimator
-add_library(vins_estimator_lib ${SRC_FILES_VINS_ESTIMATOR})
-target_link_libraries(vins_estimator_lib
+target_link_libraries(vins_node
   ${catkin_LIBRARIES}
   ${OpenCV_LIBS}
   ${CERES_LIBRARIES}
-  camodocal
 )
 
-## Create a shared library for global fusion
-add_library(global_fusion_lib ${SRC_FILES_GLOBAL_FUSION})
-target_link_libraries(global_fusion_lib
+add_executable(
+  loop_fusion_node
+  src/node/node_loop_fusion.cpp
+  src/loop_fusion/pose_graph.cpp
+  src/loop_fusion/keyframe.cpp
+  src/loop_fusion/parameters.cpp
+  src/loop_fusion/utility/CameraPoseVisualization.cpp
+  src/DBoW/BowVector.cpp
+  src/DBoW/FBrief.cpp
+  src/DBoW/FeatureVector.cpp
+  src/DBoW/QueryResults.cpp
+  src/DBoW/ScoringObject.cpp
+  src/DUtils/Random.cpp
+  src/DUtils/Timestamp.cpp
+  src/DVision/BRIEF.cpp
+  src/DBoW/VocabularyBinary.cpp
+  src/camodocal/camera_models/Camera.cc
+  src/camodocal/camera_models/CameraFactory.cc
+  src/camodocal/camera_models/PinholeCamera.cc
+  src/camodocal/camera_models/PinholeFullCamera.cc
+  src/camodocal/camera_models/CataCamera.cc
+  src/camodocal/camera_models/EquidistantCamera.cc
+  src/camodocal/camera_models/ScaramuzzaCamera.cc
+)
+
+target_link_libraries(loop_fusion_node
   ${catkin_LIBRARIES}
   ${OpenCV_LIBS}
   ${CERES_LIBRARIES}
-  geographiclib
 )
 
-## Create a shared library for loop fusion
-add_library(loop_fusion_lib ${SRC_FILES_LOOP_FUSION})
-target_link_libraries(loop_fusion_lib
+add_executable(
+  global_fusion_node
+  src/node/node_global_fusion.cpp
+  src/global_fusion/globalOpt.cpp
+  src/GeographicLib/LocalCartesian.cpp
+  src/GeographicLib/Geocentric.cpp
+  src/GeographicLib/Math.cpp
+)
+
+target_link_libraries(global_fusion_node
   ${catkin_LIBRARIES}
   ${OpenCV_LIBS}
   ${CERES_LIBRARIES}
-  dvision_lib
-  camodocal
 )
-
-## Optional: Create executables separately if needed
-add_executable(vins_node src/node/node_ros.cpp)
-target_link_libraries(vins_node vins_estimator_lib)
-
-add_executable(kitti_odom_test src/node/node_kitti_odom.cpp)
-target_link_libraries(kitti_odom_test vins_estimator_lib)
-
-add_executable(kitti_gps_test src/node/node_kitti_gps.cpp)
-target_link_libraries(kitti_gps_test vins_estimator_lib)
-
-add_executable(loop_fusion_node src/node/node_loop_fusion.cpp)
-target_link_libraries(loop_fusion_node loop_fusion_lib)
-
-add_executable(global_fusion_node src/node/node_global_fusion.cpp)
-target_link_libraries(global_fusion_node global_fusion_lib)
