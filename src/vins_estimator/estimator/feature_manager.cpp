@@ -16,8 +16,7 @@ int FeaturePerId::endFrame() const {
   return start_frame + feature_per_frame.size() - 1;
 }
 
-FeatureManager::FeatureManager(Matrix3d _Rs[], Parameters &params)
-    : Rs(_Rs), params(params) {
+FeatureManager::FeatureManager(Parameters &params) : params(params) {
   for (int i = 0; i < params.num_of_cam; i++) ric[i].setIdentity();
 }
 
@@ -554,7 +553,8 @@ void FeatureManager::logFeature(
   output_file.close();
 }
 
-void FeatureManager::logOutlier(const set<int> &outlierIndex, const string &path) {
+void FeatureManager::logOutlier(const set<int> &outlierIndex,
+                                const string &path) {
   std::ofstream output_file(path, std::ios::app);
 
   output_file << "outlier\n";
