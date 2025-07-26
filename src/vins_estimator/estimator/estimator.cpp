@@ -14,7 +14,7 @@
 namespace vins::estimator {
 
 Estimator::Estimator(Parameters &params)
-    : f_manager{Rs, params},
+    : f_manager{params},
       featureTracker{params},
       initThreadFlag{false},
       params{params},

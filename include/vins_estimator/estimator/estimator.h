@@ -105,8 +105,9 @@ class Estimator {
   queue<pair<double, Eigen::Vector3d>> gyrBuf;
   queue<pair<double, map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>>>>
       featureBuf;
-  double prevTime, curTime;
-  bool openExEstimation;
+  double prevTime = 0.0;
+  double curTime = 0.0;
+  bool openExEstimation = false;
 
   std::thread trackThread;
   std::thread processThread;
@@ -125,35 +126,35 @@ class Estimator {
   Matrix3d Rs[(WINDOW_SIZE + 1)];
   Vector3d Bas[(WINDOW_SIZE + 1)];
   Vector3d Bgs[(WINDOW_SIZE + 1)];
-  double td;
+  double td = 0.0;
 
   Matrix3d back_R0, last_R, last_R0;
   Vector3d back_P0, last_P, last_P0;
   double Headers[(WINDOW_SIZE + 1)];
 
-  IntegrationBase *pre_integrations[(WINDOW_SIZE + 1)];
+  IntegrationBase *pre_integrations[(WINDOW_SIZE + 1)] = {};
   Vector3d acc_0, gyr_0;
 
   vector<double> dt_buf[(WINDOW_SIZE + 1)];
   vector<Vector3d> linear_acceleration_buf[(WINDOW_SIZE + 1)];
   vector<Vector3d> angular_velocity_buf[(WINDOW_SIZE + 1)];
 
-  int frame_count;
-  int sum_of_outlier, sum_of_back, sum_of_front, sum_of_invalid;
-  int inputImageCnt;
+  int frame_count = 0;
+  int sum_of_outlier = 0, sum_of_back = 0, sum_of_front = 0, sum_of_invalid = 0;
+  int inputImageCnt = 0;
 
   FeatureManager f_manager;
   MotionEstimator m_estimator;
   InitialEXRotation initial_ex_rotation;
 
-  bool first_imu;
-  bool is_valid, is_key;
-  bool failure_occur;
+  bool first_imu = false;
+  bool is_valid = false, is_key = false;
+  bool failure_occur = false;
 
   vector<Vector3d> point_cloud;
   vector<Vector3d> margin_cloud;
   vector<Vector3d> key_poses;
-  double initial_timestamp;
+  double initial_timestamp = 0.0;
 
   double para_Pose[WINDOW_SIZE + 1][SIZE_POSE];
   double para_SpeedBias[WINDOW_SIZE + 1][SIZE_SPEEDBIAS];
@@ -163,24 +164,22 @@ class Estimator {
   double para_Td[1][1];
   double para_Tr[1][1];
 
-  int loop_window_index;
-
-  MarginalizationInfo *last_marginalization_info;
+  MarginalizationInfo *last_marginalization_info = nullptr;
   vector<double *> last_marginalization_parameter_blocks;
 
   map<double, ImageFrame> all_image_frame;
-  IntegrationBase *tmp_pre_integration;
+  IntegrationBase *tmp_pre_integration = nullptr;
 
   Eigen::Vector3d initP;
   Eigen::Matrix3d initR;
 
-  double latest_time;
+  double latest_time = 0.0;
   Eigen::Vector3d latest_P, latest_V, latest_Ba, latest_Bg, latest_acc_0,
       latest_gyr_0;
   Eigen::Quaterniond latest_Q;
 
-  bool initFirstPoseFlag;
-  bool initThreadFlag;
+  bool initFirstPoseFlag = false;
+  bool initThreadFlag = false;
 };
 
 }  // namespace vins::estimator
