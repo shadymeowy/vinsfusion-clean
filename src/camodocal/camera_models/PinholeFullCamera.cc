@@ -1,5 +1,4 @@
 #include <camodocal/camera_models/PinholeFullCamera.h>
-#include <camodocal/gpl/gpl.h>
 
 #include <cmath>
 #include <cstdio>
@@ -274,90 +273,6 @@ int PinholeFullCamera::imageWidth(void) const {
 
 int PinholeFullCamera::imageHeight(void) const {
   return mParameters.imageHeight();
-}
-
-void PinholeFullCamera::estimateIntrinsics(
-    const cv::Size &boardSize,
-    const std::vector<std::vector<cv::Point3f> > &objectPoints,
-    const std::vector<std::vector<cv::Point2f> > &imagePoints) {
-  // Z. Zhang, A Flexible New Technique for Camera Calibration, PAMI 2000
-
-  Parameters params = getParameters();
-
-  params.k1() = 0.0;
-  params.k2() = 0.0;
-  params.p1() = 0.0;
-  params.p2() = 0.0;
-
-  double cx = params.imageWidth() / 2.0;
-  double cy = params.imageHeight() / 2.0;
-  params.cx() = cx;
-  params.cy() = cy;
-
-  size_t nImages = imagePoints.size();
-
-  cv::Mat A(nImages * 2, 2, CV_64F);
-  cv::Mat b(nImages * 2, 1, CV_64F);
-
-  for (size_t i = 0; i < nImages; ++i) {
-    const std::vector<cv::Point3f> &oPoints = objectPoints.at(i);
-
-    std::vector<cv::Point2f> M(oPoints.size());
-    for (size_t j = 0; j < M.size(); ++j) {
-      M.at(j) = cv::Point2f(oPoints.at(j).x, oPoints.at(j).y);
-    }
-
-    cv::Mat H = cv::findHomography(M, imagePoints.at(i));
-
-    H.at<double>(0, 0) -= H.at<double>(2, 0) * cx;
-    H.at<double>(0, 1) -= H.at<double>(2, 1) * cx;
-    H.at<double>(0, 2) -= H.at<double>(2, 2) * cx;
-    H.at<double>(1, 0) -= H.at<double>(2, 0) * cy;
-    H.at<double>(1, 1) -= H.at<double>(2, 1) * cy;
-    H.at<double>(1, 2) -= H.at<double>(2, 2) * cy;
-
-    double h[3], v[3], d1[3], d2[3];
-    double n[4] = {0, 0, 0, 0};
-
-    for (int j = 0; j < 3; ++j) {
-      double t0 = H.at<double>(j, 0);
-      double t1 = H.at<double>(j, 1);
-      h[j] = t0;
-      v[j] = t1;
-      d1[j] = (t0 + t1) * 0.5;
-      d2[j] = (t0 - t1) * 0.5;
-      n[0] += t0 * t0;
-      n[1] += t1 * t1;
-      n[2] += d1[j] * d1[j];
-      n[3] += d2[j] * d2[j];
-    }
-
-    for (int j = 0; j < 4; ++j) {
-      n[j] = 1.0 / sqrt(n[j]);
-    }
-
-    for (int j = 0; j < 3; ++j) {
-      h[j] *= n[0];
-      v[j] *= n[1];
-      d1[j] *= n[2];
-      d2[j] *= n[3];
-    }
-
-    A.at<double>(i * 2, 0) = h[0] * v[0];
-    A.at<double>(i * 2, 1) = h[1] * v[1];
-    A.at<double>(i * 2 + 1, 0) = d1[0] * d2[0];
-    A.at<double>(i * 2 + 1, 1) = d1[1] * d2[1];
-    b.at<double>(i * 2, 0) = -h[2] * v[2];
-    b.at<double>(i * 2 + 1, 0) = -d1[2] * d2[2];
-  }
-
-  cv::Mat f(2, 1, CV_64F);
-  cv::solve(A, b, f, cv::DECOMP_NORMAL | cv::DECOMP_LU);
-
-  params.fx() = sqrt(fabs(1.0 / f.at<double>(0)));
-  params.fy() = sqrt(fabs(1.0 / f.at<double>(1)));
-
-  setParameters(params);
 }
 
 /**

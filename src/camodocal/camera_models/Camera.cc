@@ -71,26 +71,6 @@ cv::Mat &Camera::mask(void) { return m_mask; }
 
 const cv::Mat &Camera::mask(void) const { return m_mask; }
 
-void Camera::estimateExtrinsics(const std::vector<cv::Point3f> &objectPoints,
-                                const std::vector<cv::Point2f> &imagePoints,
-                                cv::Mat &rvec, cv::Mat &tvec) const {
-  std::vector<cv::Point2f> Ms(imagePoints.size());
-  for (size_t i = 0; i < Ms.size(); ++i) {
-    Eigen::Vector3d P;
-    liftProjective(Eigen::Vector2d(imagePoints.at(i).x, imagePoints.at(i).y),
-                   P);
-
-    P /= P(2);
-
-    Ms.at(i).x = P(0);
-    Ms.at(i).y = P(1);
-  }
-
-  // assume unit focal length, zero principal point, and zero distortion
-  cv::solvePnP(objectPoints, Ms, cv::Mat::eye(3, 3, CV_64F), cv::noArray(),
-               rvec, tvec);
-}
-
 double Camera::reprojectionDist(const Eigen::Vector3d &P1,
                                 const Eigen::Vector3d &P2) const {
   Eigen::Vector2d p1, p2;

@@ -1,5 +1,4 @@
 #include <camodocal/camera_models/EquidistantCamera.h>
-#include <camodocal/gpl/gpl.h>
 
 #include <cmath>
 #include <cstdio>
@@ -203,97 +202,6 @@ int EquidistantCamera::imageWidth(void) const {
 
 int EquidistantCamera::imageHeight(void) const {
   return mParameters.imageHeight();
-}
-
-void EquidistantCamera::estimateIntrinsics(
-    const cv::Size &boardSize,
-    const std::vector<std::vector<cv::Point3f> > &objectPoints,
-    const std::vector<std::vector<cv::Point2f> > &imagePoints) {
-  Parameters params = getParameters();
-
-  double u0 = params.imageWidth() / 2.0;
-  double v0 = params.imageHeight() / 2.0;
-
-  double minReprojErr = std::numeric_limits<double>::max();
-
-  std::vector<cv::Mat> rvecs, tvecs;
-  rvecs.assign(objectPoints.size(), cv::Mat());
-  tvecs.assign(objectPoints.size(), cv::Mat());
-
-  params.k2() = 0.0;
-  params.k3() = 0.0;
-  params.k4() = 0.0;
-  params.k5() = 0.0;
-  params.u0() = u0;
-  params.v0() = v0;
-
-  // Initialize focal length
-  // C. Hughes, P. Denny, M. Glavin, and E. Jones,
-  // Equidistant Fish-Eye Calibration and Rectification by Vanishing Point
-  // Extraction, PAMI 2010
-  // Find circles from rows of chessboard corners, and for each pair
-  // of circles, find vanishing points: v1 and v2.
-  // f = ||v1 - v2|| / PI;
-  double f0 = 0.0;
-  for (size_t i = 0; i < imagePoints.size(); ++i) {
-    std::vector<Eigen::Vector2d> center(boardSize.height);
-    double radius[boardSize.height];
-    for (int r = 0; r < boardSize.height; ++r) {
-      std::vector<cv::Point2d> circle;
-      for (int c = 0; c < boardSize.width; ++c) {
-        circle.push_back(imagePoints.at(i).at(r * boardSize.width + c));
-      }
-
-      fitCircle(circle, center[r](0), center[r](1), radius[r]);
-    }
-
-    for (int j = 0; j < boardSize.height; ++j) {
-      for (int k = j + 1; k < boardSize.height; ++k) {
-        // find distance between pair of vanishing points which
-        // correspond to intersection points of 2 circles
-        std::vector<cv::Point2d> ipts;
-        ipts = intersectCircles(center[j](0), center[j](1), radius[j],
-                                center[k](0), center[k](1), radius[k]);
-
-        if (ipts.size() < 2) {
-          continue;
-        }
-
-        double f = cv::norm(ipts.at(0) - ipts.at(1)) / M_PI;
-
-        params.mu() = f;
-        params.mv() = f;
-
-        setParameters(params);
-
-        for (size_t l = 0; l < objectPoints.size(); ++l) {
-          estimateExtrinsics(objectPoints.at(l), imagePoints.at(l), rvecs.at(l),
-                             tvecs.at(l));
-        }
-
-        double reprojErr = reprojectionError(objectPoints, imagePoints, rvecs,
-                                             tvecs, cv::noArray());
-
-        if (reprojErr < minReprojErr) {
-          minReprojErr = reprojErr;
-          f0 = f;
-        }
-      }
-    }
-  }
-
-  if (f0 <= 0.0 && minReprojErr >= std::numeric_limits<double>::max()) {
-    std::cout << "[" << params.cameraName() << "] "
-              << "# INFO: kannala-Brandt model fails with given data. "
-              << std::endl;
-
-    return;
-  }
-
-  params.mu() = f0;
-  params.mv() = f0;
-
-  setParameters(params);
 }
 
 /**

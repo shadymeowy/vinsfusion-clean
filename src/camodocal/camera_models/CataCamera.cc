@@ -1,5 +1,4 @@
 #include <camodocal/camera_models/CataCamera.h>
-#include <camodocal/gpl/gpl.h>
 
 #include <cmath>
 #include <cstdio>
@@ -246,99 +245,6 @@ const std::string &CataCamera::cameraName(void) const {
 int CataCamera::imageWidth(void) const { return mParameters.imageWidth(); }
 
 int CataCamera::imageHeight(void) const { return mParameters.imageHeight(); }
-
-void CataCamera::estimateIntrinsics(
-    const cv::Size &boardSize,
-    const std::vector<std::vector<cv::Point3f> > &objectPoints,
-    const std::vector<std::vector<cv::Point2f> > &imagePoints) {
-  Parameters params = getParameters();
-
-  double u0 = params.imageWidth() / 2.0;
-  double v0 = params.imageHeight() / 2.0;
-
-  double gamma0 = 0.0;
-  double minReprojErr = std::numeric_limits<double>::max();
-
-  std::vector<cv::Mat> rvecs, tvecs;
-  rvecs.assign(objectPoints.size(), cv::Mat());
-  tvecs.assign(objectPoints.size(), cv::Mat());
-
-  params.xi() = 1.0;
-  params.k1() = 0.0;
-  params.k2() = 0.0;
-  params.p1() = 0.0;
-  params.p2() = 0.0;
-  params.u0() = u0;
-  params.v0() = v0;
-
-  // Initialize gamma (focal length)
-  // Use non-radial line image and xi = 1
-  for (size_t i = 0; i < imagePoints.size(); ++i) {
-    for (int r = 0; r < boardSize.height; ++r) {
-      cv::Mat P(boardSize.width, 4, CV_64F);
-      for (int c = 0; c < boardSize.width; ++c) {
-        const cv::Point2f &imagePoint =
-            imagePoints.at(i).at(r * boardSize.width + c);
-
-        double u = imagePoint.x - u0;
-        double v = imagePoint.y - v0;
-
-        P.at<double>(c, 0) = u;
-        P.at<double>(c, 1) = v;
-        P.at<double>(c, 2) = 0.5;
-        P.at<double>(c, 3) = -0.5 * (square(u) + square(v));
-      }
-
-      cv::Mat C;
-      cv::SVD::solveZ(P, C);
-
-      double t = square(C.at<double>(0)) + square(C.at<double>(1)) +
-                 C.at<double>(2) * C.at<double>(3);
-      if (t < 0.0) {
-        continue;
-      }
-
-      // check that line image is not radial
-      double d = sqrt(1.0 / t);
-      double nx = C.at<double>(0) * d;
-      double ny = C.at<double>(1) * d;
-      if (hypot(nx, ny) > 0.95) {
-        continue;
-      }
-
-      double gamma = sqrt(C.at<double>(2) / C.at<double>(3));
-
-      params.gamma1() = gamma;
-      params.gamma2() = gamma;
-      setParameters(params);
-
-      for (size_t j = 0; j < objectPoints.size(); ++j) {
-        estimateExtrinsics(objectPoints.at(j), imagePoints.at(j), rvecs.at(j),
-                           tvecs.at(j));
-      }
-
-      double reprojErr = reprojectionError(objectPoints, imagePoints, rvecs,
-                                           tvecs, cv::noArray());
-
-      if (reprojErr < minReprojErr) {
-        minReprojErr = reprojErr;
-        gamma0 = gamma;
-      }
-    }
-  }
-
-  if (gamma0 <= 0.0 && minReprojErr >= std::numeric_limits<double>::max()) {
-    std::cout << "[" << params.cameraName() << "] "
-              << "# INFO: CataCamera model fails with given data. "
-              << std::endl;
-
-    return;
-  }
-
-  params.gamma1() = gamma0;
-  params.gamma2() = gamma0;
-  setParameters(params);
-}
 
 /**
  * \brief Lifts a point from the image plane to the unit sphere

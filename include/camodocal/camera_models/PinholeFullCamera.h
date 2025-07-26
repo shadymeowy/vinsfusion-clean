@@ -90,11 +90,6 @@ class PinholeFullCamera : public Camera {
     return cv::Point2f(mParameters.cx(), mParameters.cy());
   }
 
-  void estimateIntrinsics(
-      const cv::Size &boardSize,
-      const std::vector<std::vector<cv::Point3f> > &objectPoints,
-      const std::vector<std::vector<cv::Point2f> > &imagePoints);
-
   void setInitIntrinsics(
       const std::vector<std::vector<cv::Point3f> > &objectPoints,
       const std::vector<std::vector<cv::Point2f> > &imagePoints) {

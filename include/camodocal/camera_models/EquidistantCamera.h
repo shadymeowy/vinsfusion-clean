@@ -79,11 +79,6 @@ class EquidistantCamera : public Camera {
   int imageWidth(void) const;
   int imageHeight(void) const;
 
-  void estimateIntrinsics(
-      const cv::Size &boardSize,
-      const std::vector<std::vector<cv::Point3f> > &objectPoints,
-      const std::vector<std::vector<cv::Point2f> > &imagePoints);
-
   // Lift points from the image plane to the sphere
   virtual void liftSphere(const Eigen::Vector2d &p, Eigen::Vector3d &P) const;
   //%output P
