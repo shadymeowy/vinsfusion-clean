@@ -169,8 +169,6 @@ void Parameters::read_from_file(const std::string &config_file) {
   save_image = fsSettings["save_image"];
   load_previous_pose_graph = fsSettings["load_previous_pose_graph"];
 
-  fsSettings.release();
-
   char *env_terminate_t_str = getenv("VINS_TERMINATE_TIME");
   if (env_terminate_t_str != nullptr) {
     terminate_t = atof(env_terminate_t_str);
@@ -178,6 +176,58 @@ void Parameters::read_from_file(const std::string &config_file) {
     // default value, no termination time set
     terminate_t = -1.0;
   }
+
+  // check if loss_type is set
+  if (fsSettings["loss_type"].empty()) {
+    std::cerr
+        << "ERROR: loss_type not set in config file, defaulting to LOSS_L2"
+        << std::endl;
+    loss_type = LOSS_HUBER;
+  } else {
+    int loss_type_int;
+    fsSettings["loss_type"] >> loss_type_int;
+    loss_type = static_cast<LossType>(loss_type_int);
+  }
+
+  // check if loss_parameter is set
+  if (fsSettings["loss_parameter"].empty()) {
+    std::cerr
+        << "ERROR: loss_parameter not set in config file, defaulting to 1.0"
+        << std::endl;
+    loss_parameter = 1.0;
+  } else {
+    fsSettings["loss_parameter"] >> loss_parameter;
+  }
+
+  // check if loss_type_initial is set
+  if (fsSettings["loss_type_initial"].empty()) {
+    std::cerr << "ERROR: loss_type_initial not set in config file, defaulting "
+                 "to LOSS_L2"
+              << std::endl;
+    loss_type_initial = LOSS_L2;
+  } else {
+    int loss_type_initial_int;
+    fsSettings["loss_type_initial"] >> loss_type_initial_int;
+    loss_type_initial = static_cast<LossType>(loss_type_initial_int);
+  }
+
+  // check if loss_parameter_initial is set
+  if (fsSettings["loss_parameter_initial"].empty()) {
+    std::cerr << "ERROR: loss_parameter_initial not set in config file, "
+                 "defaulting to 1.0"
+              << std::endl;
+    loss_parameter_initial = 1.0;
+  } else {
+    fsSettings["loss_parameter_initial"] >> loss_parameter_initial;
+  }
+
+  fsSettings.release();
+
+  std::cout << "loss type: " << loss_type
+            << ", loss parameter: " << loss_parameter << std::endl;
+  std::cout << "loss type initial: " << loss_type_initial
+            << ", loss parameter initial: " << loss_parameter_initial
+            << std::endl;
 }
 
 }  // namespace vins::estimator

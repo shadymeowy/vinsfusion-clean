@@ -27,6 +27,13 @@
 
 namespace vins::loop_fusion {
 
+enum LossType {
+  LOSS_L2 = 0,
+  LOSS_HUBER = 1,
+  LOSS_TUKEY = 2,
+  LOSS_CAUCHY = 3,
+};
+
 extern ros::Publisher pub_match_img;
 extern camodocal::CameraPtr m_camera;
 extern std::string BRIEF_PATTERN_FILE;
@@ -78,6 +85,11 @@ struct Parameters {
   int load_previous_pose_graph;
 
   float terminate_t;
+
+  LossType loss_type;
+  double loss_parameter;
+  LossType loss_type_initial;
+  double loss_parameter_initial;
 
   void read_from_file(const std::string &config_file);
 };

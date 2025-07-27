@@ -13,6 +13,7 @@
 #include <vins_estimator/utility/visualization.h>
 
 #include <cassert>
+#include <cstddef>
 
 namespace vins::estimator {
 
@@ -935,10 +936,20 @@ void Estimator::optimization() {
 
   ceres::Problem problem;
   ceres::LossFunction *loss_function;
-  // loss_function = NULL;
-  loss_function = new ceres::HuberLoss(1.0);
-  // loss_function = new ceres::CauchyLoss(1.0 / params.focal_length);
-  // ceres::LossFunction* loss_function = new ceres::HuberLoss(1.0);
+
+  if (params.loss_type == LOSS_HUBER) {
+    loss_function = new ceres::HuberLoss(params.loss_parameter);
+  } else if (params.loss_type == LOSS_CAUCHY) {
+    loss_function = new ceres::CauchyLoss(params.loss_parameter);
+  } else if (params.loss_type == LOSS_TUKEY) {
+    loss_function = new ceres::TukeyLoss(params.loss_parameter);
+  } else if (params.loss_type == LOSS_L2) {
+    loss_function = nullptr;
+  } else {
+    ROS_ERROR("Unknown loss type!");
+    exit(-1);
+  }
+
   for (int i = 0; i < frame_count + 1; i++) {
     ceres::Manifold *manifold = new PoseManifold();
     problem.AddParameterBlock(para_Pose[i], SIZE_POSE);

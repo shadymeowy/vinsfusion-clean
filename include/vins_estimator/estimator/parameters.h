@@ -23,6 +23,13 @@ namespace vins::estimator {
 #define WINDOW_SIZE 10
 #define NUM_OF_F 4096
 
+enum LossType {
+  LOSS_L2 = 0,
+  LOSS_HUBER = 1,
+  LOSS_TUKEY = 2,
+  LOSS_CAUCHY = 3,
+};
+
 struct Parameters {
   double focal_length;
 
@@ -71,6 +78,11 @@ struct Parameters {
 
   int feature_debug;
   std::string feature_debug_path;
+
+  LossType loss_type;
+  double loss_parameter;
+  LossType loss_type_initial;
+  double loss_parameter_initial;
 
   void read_from_file(const std::string &config_file);
 };

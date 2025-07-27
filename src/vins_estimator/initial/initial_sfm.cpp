@@ -251,9 +251,23 @@ bool GlobalSFM::construct(int frame_num, Quaterniond *q, Vector3d *T, int l,
     }
   }
 
-  ceres::LossFunction *loss_function = nullptr;
-  // loss_function = new ceres::CauchyLoss(5.0 / params.focal_length);
-  // loss_function = new ceres::HuberLoss(5.0 / params.focal_length);
+  ceres::LossFunction *loss_function;
+
+  if (params.loss_type_initial == LOSS_HUBER) {
+    loss_function =
+        new ceres::HuberLoss(params.loss_parameter_initial / params.focal_length);
+  } else if (params.loss_type_initial == LOSS_CAUCHY) {
+    loss_function =
+        new ceres::CauchyLoss(params.loss_parameter_initial / params.focal_length);
+  } else if (params.loss_type_initial == LOSS_TUKEY) {
+    loss_function =
+        new ceres::TukeyLoss(params.loss_parameter_initial / params.focal_length);
+  } else if (params.loss_type_initial == LOSS_L2) {
+    loss_function = nullptr;
+  } else {
+    ROS_ERROR("Unknown loss type!");
+    exit(-1);
+  }
 
   for (int i = 0; i < feature_num; i++) {
     if (sfm_f[i].state != true) continue;
