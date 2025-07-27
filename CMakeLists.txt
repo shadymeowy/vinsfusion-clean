@@ -78,6 +78,9 @@ add_executable(
   src/vins_estimator/initial/initial_sfm.cpp
   src/vins_estimator/initial/initial_ex_rotation.cpp
   src/vins_estimator/featureTracker/feature_tracker.cpp
+  src/vins_estimator/featureTracker/feature_tracker_log.cpp
+  src/vins_estimator/featureTracker/feature_tracker_mono.cpp
+  src/vins_estimator/featureTracker/klt_tracker.cpp
   src/camodocal/camera_models/Camera.cc
   src/camodocal/camera_models/CameraFactory.cc
   src/camodocal/camera_models/PinholeCamera.cc
@@ -87,16 +90,16 @@ add_executable(
   src/camodocal/camera_models/ScaramuzzaCamera.cc
 )
 
+set_target_properties(vins_node PROPERTIES
+  BUILD_WITH_INSTALL_RPATH TRUE
+  INSTALL_RPATH "/root/catkin_ws/src/VINS-Fusion/pyloader/build"
+)
+
 target_link_libraries(vins_node
   ${catkin_LIBRARIES}
   ${OpenCV_LIBS}
   ${CERES_LIBRARIES}
-  "/root/catkin_ws/src/VINS-Fusion/pyloader/libpyloader.so"
-)
-
-set_target_properties(vins_node PROPERTIES
-  BUILD_WITH_INSTALL_RPATH TRUE
-  INSTALL_RPATH "/root/catkin_ws/src/VINS-Fusion/pyloader"
+  "/root/catkin_ws/src/VINS-Fusion/pyloader/build/libpyloader.so"
 )
 
 add_executable(
