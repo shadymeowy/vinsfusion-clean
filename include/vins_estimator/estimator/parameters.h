@@ -21,10 +21,10 @@
 namespace vins::estimator {
 
 #define WINDOW_SIZE 10
-#define NUM_OF_F 1000
+#define NUM_OF_F 4096
 
 struct Parameters {
-  double focal_length = 460.0;
+  double focal_length;
 
   double init_depth;
   double min_parallax;
@@ -72,7 +72,7 @@ struct Parameters {
   int feature_debug;
   std::string feature_debug_path;
 
-  void read_from_file(const std::string& config_file);
+  void read_from_file(const std::string &config_file);
 };
 
 enum SIZE_PARAMETERIZATION {

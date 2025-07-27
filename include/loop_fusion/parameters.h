@@ -34,7 +34,7 @@ extern Eigen::Vector3d tic;
 extern Eigen::Matrix3d qic;
 
 struct Parameters {
-  double focal_length = 460.0;
+  double focal_length;
 
   double init_depth;
   double min_parallax;
@@ -79,7 +79,7 @@ struct Parameters {
 
   float terminate_t;
 
-  void read_from_file(std::string config_file);
+  void read_from_file(const std::string &config_file);
 };
 
 }  // namespace vins::loop_fusion

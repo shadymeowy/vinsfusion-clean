@@ -8,7 +8,7 @@ std::string BRIEF_PATTERN_FILE;
 Eigen::Vector3d tic;
 Eigen::Matrix3d qic;
 
-void Parameters::read_from_file(std::string config_file) {
+void Parameters::read_from_file(const std::string &config_file) {
   FILE *fh = fopen(config_file.c_str(), "r");
   if (fh == NULL) {
     ROS_WARN("config_file doesn't exist; wrong config_file path");
@@ -54,6 +54,15 @@ void Parameters::read_from_file(std::string config_file) {
   std::cout << "result path " << vins_result_path << std::endl;
   std::ofstream fout(vins_result_path, std::ios::out);
   fout.close();
+
+  // check if focal_length is set
+  if (fsSettings["focal_length"].empty()) {
+    std::cerr << "ERROR: focal_length not set in config file" << std::endl;
+    focal_length = 460.0;
+  } else {
+    fsSettings["focal_length"] >> focal_length;
+    std::cout << "focal length: " << focal_length << std::endl;
+  }
 
   estimate_extrinsic = fsSettings["estimate_extrinsic"];
   if (estimate_extrinsic == 2) {
