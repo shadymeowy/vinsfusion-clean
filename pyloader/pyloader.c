@@ -4,7 +4,7 @@
 #include <string.h>
 #include <wchar.h>
 
-#include "python_paths.h"
+#include "build/python_paths.h"
 
 extern PyObject *PyInit_mymodule(void);
 static PyConfig config;
