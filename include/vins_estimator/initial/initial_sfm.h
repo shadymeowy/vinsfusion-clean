@@ -25,6 +25,8 @@
 using namespace Eigen;
 using namespace std;
 
+#include <vins_estimator/estimator/parameters.h>
+
 namespace vins::estimator {
 
 struct SFMFeature {
@@ -66,7 +68,7 @@ struct ReprojectionError3D {
 
 class GlobalSFM {
  public:
-  GlobalSFM();
+  GlobalSFM(Parameters &param);
   bool construct(int frame_num, Quaterniond *q, Vector3d *T, int l,
                  const Matrix3d relative_R, const Vector3d relative_T,
                  vector<SFMFeature> &sfm_f,
@@ -84,6 +86,7 @@ class GlobalSFM {
                             vector<SFMFeature> &sfm_f);
 
   int feature_num;
+  Parameters &params;
 };
 
 }  // namespace vins::estimator

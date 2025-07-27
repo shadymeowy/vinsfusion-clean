@@ -222,14 +222,14 @@ void KeyFrame::PnPRANSAC(const vector<cv::Point2f> &matched_2d_old_norm,
 
   if (CV_MAJOR_VERSION < 3)
     solvePnPRansac(matched_3d, matched_2d_old_norm, K, D, rvec, t, true, 100,
-                   10.0 / 460.0, 100, inliers);
+                   10.0 / params.focal_length, 100, inliers);
   else {
     if (CV_MINOR_VERSION < 2)
       solvePnPRansac(matched_3d, matched_2d_old_norm, K, D, rvec, t, true, 100,
-                     sqrt(10.0 / 460.0), 0.99, inliers);
+                     sqrt(10.0 / params.focal_length), 0.99, inliers);
     else
       solvePnPRansac(matched_3d, matched_2d_old_norm, K, D, rvec, t, true, 100,
-                     10.0 / 460.0, 0.99, inliers);
+                     10.0 / params.focal_length, 0.99, inliers);
   }
 
   for (int i = 0; i < (int)matched_2d_old_norm.size(); i++) status.push_back(0);

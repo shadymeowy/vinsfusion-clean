@@ -9,14 +9,16 @@
  *******************************************************/
 
 #include <vins_estimator/estimator/estimator.h>
+#include <vins_estimator/estimator/parameters.h>
 #include <vins_estimator/utility/visualization.h>
+
+#include <cassert>
 
 namespace vins::estimator {
 
 Estimator::Estimator(Parameters &params)
     : f_manager{params},
       featureTracker{params},
-      initThreadFlag{false},
       params{params},
       initial_ex_rotation{params} {
   ROS_INFO("init begins");
@@ -595,7 +597,7 @@ bool Estimator::initialStructure() {
     ROS_INFO("Not enough features or parallax; Move device around");
     return false;
   }
-  GlobalSFM sfm;
+  GlobalSFM sfm{params};
   if (!sfm.construct(frame_count + 1, Q, T, l, relative_R, relative_T, sfm_f,
                      sfm_tracked_points)) {
     ROS_DEBUG("global SFM failed!");
@@ -745,13 +747,14 @@ bool Estimator::relativePose(Matrix3d &relative_R, Vector3d &relative_T,
         sum_parallax = sum_parallax + parallax;
       }
       average_parallax = 1.0 * sum_parallax / int(corres.size());
-      if (average_parallax * 460 > 30 &&
-          m_estimator.solveRelativeRT(corres, relative_R, relative_T)) {
+      if (average_parallax * params.focal_length > 30 &&
+          m_estimator.solveRelativeRT(corres, relative_R, relative_T,
+                                      params.focal_length)) {
         l = i;
         ROS_DEBUG(
             "average_parallax %f choose l %d and newest frame to triangulate "
             "the whole structure",
-            average_parallax * 460, l);
+            average_parallax * params.focal_length, l);
         return true;
       }
     }
@@ -797,8 +800,10 @@ void Estimator::vector2double() {
   }
 
   VectorXd dep = f_manager.getDepthVector();
-  for (int i = 0; i < f_manager.getFeatureCount(); i++)
+  for (int i = 0; i < f_manager.getFeatureCount(); i++) {
     para_Feature[i][0] = dep(i);
+    assert(i < NUM_OF_F);
+  }
 
   para_Td[0][0] = td;
 }
@@ -873,8 +878,10 @@ void Estimator::double2vector() {
   }
 
   VectorXd dep = f_manager.getDepthVector();
-  for (int i = 0; i < f_manager.getFeatureCount(); i++)
+  for (int i = 0; i < f_manager.getFeatureCount(); i++) {
     dep(i) = para_Feature[i][0];
+    assert(i < NUM_OF_F);
+  }
   f_manager.setDepth(dep);
 
   if (params.use_imu) td = para_Td[0][0];

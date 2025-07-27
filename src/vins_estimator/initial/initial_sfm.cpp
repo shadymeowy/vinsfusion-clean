@@ -10,11 +10,12 @@
  * Author: Qin Tong (qintonguav@gmail.com)
  *******************************************************/
 
+#include <ceres/loss_function.h>
 #include <vins_estimator/initial/initial_sfm.h>
 
 namespace vins::estimator {
 
-GlobalSFM::GlobalSFM() {}
+GlobalSFM::GlobalSFM(Parameters &params) : params(params) { feature_num = 0; }
 
 void GlobalSFM::triangulatePoint(Eigen::Matrix<double, 3, 4> &Pose0,
                                  Eigen::Matrix<double, 3, 4> &Pose1,
@@ -250,6 +251,10 @@ bool GlobalSFM::construct(int frame_num, Quaterniond *q, Vector3d *T, int l,
     }
   }
 
+  ceres::LossFunction *loss_function = nullptr;
+  // loss_function = new ceres::CauchyLoss(5.0 / params.focal_length);
+  // loss_function = new ceres::HuberLoss(5.0 / params.focal_length);
+
   for (int i = 0; i < feature_num; i++) {
     if (sfm_f[i].state != true) continue;
     for (int j = 0; j < int(sfm_f[i].observation.size()); j++) {
@@ -258,13 +263,13 @@ bool GlobalSFM::construct(int frame_num, Quaterniond *q, Vector3d *T, int l,
           ReprojectionError3D::Create(sfm_f[i].observation[j].second.x(),
                                       sfm_f[i].observation[j].second.y());
 
-      problem.AddResidualBlock(cost_function, NULL, c_rotation[l],
+      problem.AddResidualBlock(cost_function, loss_function, c_rotation[l],
                                c_translation[l], sfm_f[i].position);
     }
   }
   ceres::Solver::Options options;
   options.linear_solver_type = ceres::DENSE_SCHUR;
-  // options.minimizer_progress_to_stdout = true;
+  options.minimizer_progress_to_stdout = true;
   options.max_solver_time_in_seconds = 0.2;
   ceres::Solver::Summary summary;
   ceres::Solve(options, &problem, &summary);
