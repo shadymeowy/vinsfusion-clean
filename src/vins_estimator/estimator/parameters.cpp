@@ -50,6 +50,15 @@ void Parameters::read_from_file(const std::string &config_file) {
     g.z() = fsSettings["g_norm"];
   }
 
+  // check if focal_length is set
+  if (fsSettings["focal_length"].empty()) {
+    std::cerr << "ERROR: focal_length not set in config file" << std::endl;
+    focal_length = 460.0;
+  } else {
+    fsSettings["focal_length"] >> focal_length;
+    std::cout << "focal length: " << focal_length << std::endl;
+  }
+
   solver_time = fsSettings["max_solver_time"];
   num_iterations = fsSettings["max_num_iterations"];
   min_parallax = fsSettings["keyframe_parallax"];
@@ -78,15 +87,6 @@ void Parameters::read_from_file(const std::string &config_file) {
   } else {
     feature_debug = 0;
     std::cout << "feature debug not set, default to disabled" << std::endl;
-  }
-
-  // check if focal_length is set
-  if (fsSettings["focal_length"].empty()) {
-    std::cerr << "ERROR: focal_length not set in config file" << std::endl;
-    focal_length = 460.0;
-  } else {
-    fsSettings["focal_length"] >> focal_length;
-    std::cout << "focal length: " << focal_length << std::endl;
   }
 
   estimate_extrinsic = fsSettings["estimate_extrinsic"];
