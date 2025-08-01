@@ -84,7 +84,7 @@ struct Parameters {
   int save_image;
   int load_previous_pose_graph;
 
-  float terminate_t;
+  double terminate_t;
 
   LossType loss_type;
   double loss_parameter;

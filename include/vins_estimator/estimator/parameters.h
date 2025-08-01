@@ -74,7 +74,7 @@ struct Parameters {
   int save_image;
   int load_previous_pose_graph;
 
-  float terminate_t;
+  double terminate_t;
 
   int feature_debug;
   std::string feature_debug_path;
