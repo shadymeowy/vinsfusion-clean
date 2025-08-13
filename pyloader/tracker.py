@@ -56,9 +56,9 @@ global_id_counter = 0
 class TrackerTAPNext:
     def __init__(
         self,
-        onnx_path="/datasets/tapnext_512.onnx",
+        onnx_path="/datasets/tapnext.onnx",
         engine_path="/datasets/tapnext_fp16.engine",
-        n_tracks=512,
+        n_tracks=256,
         reset_every=100,
         other_reset=False,
         outlier_elimination=False,
@@ -176,8 +176,10 @@ class TrackerTAPNext:
                 self.reset(frame)
 
             if self.other_reset:
-                cond_min_x = self.tracks[:, 0].max() < self.width * 0.5
-                cond_max_x = self.tracks[:, 0].min() > self.width * 0.5
+                cond_min_x = self.tracks[:, 1].max() < self.width * 0.7
+                cond_max_x = self.tracks[:, 1].min() > self.width * 0.3
+                cond_min_y = self.tracks[:, 0].max() < self.height * 0.7
+                cond_max_y = self.tracks[:, 0].min() > self.height * 0.3
                 if (
                     self.last_reset >= 10
                     and np.sum(self.is_valid) < self.n_tracks * 0.1
@@ -192,7 +194,7 @@ class TrackerTAPNext:
                         "#### Resetting model with new query points due to very low visibility... ####"
                     )
                     self.reset(frame)
-                elif cond_min_x or cond_max_x:
+                elif cond_min_x or cond_max_x or cond_min_y or cond_max_y:
                     print(
                         "#### Resetting model with new query points due to x condition... ####"
                     )
@@ -428,7 +430,7 @@ class TrackerRaw:
                 outlier_elimination=False, other_reset=False, reset_every=25
             )
             self.tracker3 = None
-        elif mode == "tapnext_klt":
+        elif mode == "tapnext_klt" or mode == "tapnext_klt_7":
             self.tracker1 = TrackerTAPNext(
                 outlier_elimination=False, other_reset=True, reset_every=100
             )
@@ -466,7 +468,7 @@ class TrackerRaw:
             else:
                 x2, y2, ids2, cnt2 = self.dummy()
             x3, y3, ids3, cnt3 = self.dummy()
-        elif self.mode == "tapnext_klt":
+        elif self.mode == "tapnext_klt" or self.mode == "tapnext_klt_7":
             x1, y1, ids1, cnt1 = self.tracker1.track_image(frame_dist)
             x2, y2, ids2, cnt2 = self.tracker2.track_image(frame_dist)
             x3, y3, ids3, cnt3 = self.dummy()
@@ -537,7 +539,7 @@ def draw_tracks(img, x, y, ids, cnt, prev_pts_map=None, label=False):
         ln = min(1.0, cnt[i] / 20.0)
         color = (255 * (1 - ln), 0, 255 * ln)
         cv2.circle(image_track, pt, 2, color, 2)
-        
+
         if label:
             cv2.putText(
                 image_track,
