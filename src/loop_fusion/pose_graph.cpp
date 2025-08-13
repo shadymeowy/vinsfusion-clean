@@ -19,7 +19,7 @@ namespace vins::loop_fusion {
 PoseGraph::PoseGraph(Parameters &params)
     : t_optimization(),
       params(params),
-      netvlad_db("/datasets/netvlad_db.onnx", 2048) {
+      netvlad_db(params.netvlad_onnx_path, params.netvlad_history_size) {
   posegraph_visualization = new CameraPoseVisualization(1.0, 0.0, 1.0, 1.0);
   posegraph_visualization->setScale(0.1);
   posegraph_visualization->setLineWidth(0.01);
@@ -91,7 +91,10 @@ void PoseGraph::addKeyFrame(KeyFrame *cur_kf, bool flag_detect_loop) {
   int loop_index = -1;
   if (flag_detect_loop) {
     TicToc tmp_t;
-    loop_index = detectLoopNetVLAD(cur_kf, cur_kf->index);
+    if (params.loop_use_netvlad)
+      loop_index = detectLoopNetVLAD(cur_kf, cur_kf->index);
+    else
+      loop_index = detectLoop(cur_kf, cur_kf->index);
   } else {
     addKeyFrameIntoVoc(cur_kf);
   }
@@ -221,9 +224,12 @@ void PoseGraph::loadKeyFrame(KeyFrame *cur_kf, bool flag_detect_loop) {
   cur_kf->index = global_index;
   global_index++;
   int loop_index = -1;
-  if (flag_detect_loop)
-    loop_index = detectLoopNetVLAD(cur_kf, cur_kf->index);
-  else {
+  if (flag_detect_loop) {
+    if (params.loop_use_netvlad)
+      loop_index = detectLoopNetVLAD(cur_kf, cur_kf->index);
+    else
+      loop_index = detectLoop(cur_kf, cur_kf->index);
+  } else {
     addKeyFrameIntoVoc(cur_kf);
   }
   if (loop_index != -1) {
@@ -312,7 +318,8 @@ int PoseGraph::detectLoop(KeyFrame *keyframe, int frame_index) {
   // first query; then add this frame into database!
   QueryResults ret;
   TicToc t_query;
-  db.query(keyframe->brief_descriptors, ret, 4, frame_index - 50);
+  db.query(keyframe->brief_descriptors, ret, 4,
+           frame_index - params.loop_max_idx);
 
   std::vector<int> best_idx;
   std::vector<float> best_values;
@@ -377,7 +384,7 @@ int PoseGraph::detectLoop(KeyFrame *keyframe, int frame_index) {
           cv::waitKey(20);
       }
   */
-  if (find_loop && frame_index > 50) {
+  if (find_loop && frame_index > params.loop_max_idx) {
     int min_index = -1;
     for (unsigned i = 0; i < ret.size(); i++) {
       if (min_index == -1 ||
@@ -406,7 +413,7 @@ int PoseGraph::detectLoopNetVLAD(KeyFrame *keyframe, int frame_index) {
 
   std::vector<int> best_idx_raw;
   std::vector<float> best_values_raw;
-  int max_idx = frame_index - 10;
+  int max_idx = frame_index - params.loop_max_idx;
   if (max_idx < 1) max_idx = 1;
   netvlad_db.query(keyframe->image.clone(), best_idx_raw, best_values_raw, true,
                    max_idx);
@@ -416,7 +423,7 @@ int PoseGraph::detectLoopNetVLAD(KeyFrame *keyframe, int frame_index) {
   for (size_t i = 0; i < best_idx_raw.size(); ++i) {
     printf("NetVLADDB: best_idx[%zu] = %d, value = %f\n", i, best_idx_raw[i],
            best_values_raw[i]);
-    if (best_values_raw[i] > 0.5) {
+    if (best_values_raw[i] > params.netvlad_threshold) {
       best_idx.push_back(best_idx_raw[i]);
       best_values.push_back(best_values_raw[i]);
     }
@@ -462,7 +469,7 @@ int PoseGraph::detectLoopNetVLAD(KeyFrame *keyframe, int frame_index) {
   if (best_idx.size() >= 1 && best_values[0] > 0.05)
     for (unsigned int i = 1; i < best_values.size(); i++) {
       // if (ret[i].Score > ret[0].Score * 0.3)
-      if (best_values[i] > 0.5) {
+      if (best_values[i] > params.netvlad_threshold) {
         find_loop = true;
         int tmp_index = best_idx[i];
         if (params.save_image) {
@@ -479,11 +486,11 @@ int PoseGraph::detectLoopNetVLAD(KeyFrame *keyframe, int frame_index) {
   //   cv::imshow("loop_result", loop_result);
   //   cv::waitKey(1);
   // }
-  if (find_loop && frame_index > 50) {
+  if (find_loop && frame_index > params.loop_max_idx) {
     int min_index = -1;
     for (unsigned i = 0; i < best_idx.size(); i++) {
       if (min_index == -1 ||
-          (static_cast<int>(best_idx[i]) < min_index && best_values[i] > 0.5))
+          (static_cast<int>(best_idx[i]) < min_index && best_values[i] > params.netvlad_threshold))
         min_index = best_idx[i];
     }
     return min_index;

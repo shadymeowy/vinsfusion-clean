@@ -8,7 +8,7 @@ num_of_cam: 2
 imu_topic: "/imu0"
 image0_topic: "/cam0/image_raw"
 image1_topic: "/cam1/image_raw"
-output_path: "/root/catkin_ws/src/VINS-Fusion/output"
+output_path: "/datasets/euroc/output/"
 
 cam0_calib: "cam0_mei.yaml"
 cam1_calib: "cam1_mei.yaml"
@@ -53,3 +53,14 @@ flow_back: 1            # perform forward and backward optical flow to improve f
 max_solver_time: 0.04  # max solver itration time (ms), to guarantee real time
 max_num_iterations: 8   # max solver itrations, to guarantee real time
 keyframe_parallax: 10.0 # keyframe selection threshold (pixel)
+
+# max number of loop candidates
+loop_max_idx: 10
+# use netvlad for loop detection
+loop_use_netvlad: 1
+# path to netvlad onnx model
+netvlad_onnx_path: "/datasets/netvlad_db.onnx"
+# number of images to keep in netvlad history
+netvlad_history_size: 1024
+# netvlad threshold for loop detection
+netvlad_threshold: 0.5

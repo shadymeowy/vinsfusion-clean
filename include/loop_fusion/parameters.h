@@ -24,6 +24,7 @@
 #include <eigen3/Eigen/Dense>
 #include <opencv2/core/eigen.hpp>
 #include <opencv2/opencv.hpp>
+#include <string>
 
 namespace vins::loop_fusion {
 
@@ -90,6 +91,12 @@ struct Parameters {
   double loss_parameter;
   LossType loss_type_initial;
   double loss_parameter_initial;
+
+  int loop_max_idx;
+  std::string netvlad_onnx_path;
+  int netvlad_history_size;
+  bool loop_use_netvlad;
+  float netvlad_threshold;
 
   void read_from_file(const std::string &config_file);
 };

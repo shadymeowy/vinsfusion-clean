@@ -196,6 +196,51 @@ void Parameters::read_from_file(const std::string &config_file) {
     fsSettings["loss_parameter_initial"] >> loss_parameter_initial;
   }
 
+  if (fsSettings["loop_max_idx"].empty()) {
+    std::cerr << "ERROR: loop_max_idx not set in config file, "
+                 "defaulting to 50"
+              << std::endl;
+    loop_max_idx = 50;
+  } else {
+    fsSettings["loop_max_idx"] >> loop_max_idx;
+  }
+
+  if (fsSettings["netvlad_onnx_path"].empty()) {
+    std::cerr << "ERROR: netvlad_onnx_path not set in config file, "
+                 "defaulting to empty string"
+              << std::endl;
+    netvlad_onnx_path = "";
+  } else {
+    fsSettings["netvlad_onnx_path"] >> netvlad_onnx_path;
+  }
+
+  if (fsSettings["loop_use_netvlad"].empty()) {
+    std::cerr << "ERROR: loop_use_netvlad not set in config file, "
+                 "defaulting to false"
+              << std::endl;
+    loop_use_netvlad = false;
+  } else {
+    fsSettings["loop_use_netvlad"] >> loop_use_netvlad;
+  }
+
+  if (fsSettings["netvlad_history_size"].empty()) {
+    std::cerr << "ERROR: netvlad_history_size not set in config file, "
+                 "defaulting to 1024"
+              << std::endl;
+    netvlad_history_size = 1024;
+  } else {
+    fsSettings["netvlad_history_size"] >> netvlad_history_size;
+  }
+
+  if (fsSettings["netvlad_threshold"].empty()) {
+    std::cerr << "ERROR: netvlad_threshold not set in config file, "
+                 "defaulting to 0.5"
+              << std::endl;
+    netvlad_threshold = 0.5;
+  } else {
+    fsSettings["netvlad_threshold"] >> netvlad_threshold;
+  }
+
   fsSettings.release();
 
   std::cout << "loss type: " << loss_type

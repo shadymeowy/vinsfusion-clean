@@ -8,7 +8,7 @@ num_of_cam: 2
 imu_topic: "/imu0"
 image0_topic: "/cam0/image_raw"
 image1_topic: "/cam1/image_raw"
-output_path: "/root/catkin_ws/src/VINS-Fusion/output"
+output_path: "/datasets/euroc/output/"
 
 cam0_calib: "cam0_mei.yaml"
 cam1_calib: "cam1_mei.yaml"
@@ -69,3 +69,14 @@ td: 0.0                             # initial value of time offset. unit: s. rea
 load_previous_pose_graph: 0        # load and reuse previous pose graph; load from 'pose_graph_save_path'
 pose_graph_save_path: "/root/catkin_ws/src/VINS-Fusion/output/pose_graph/" # save and load path
 save_image: 1                   # save image in pose graph for visualization prupose; you can close this function by setting 0 
+
+# max number of loop candidates
+loop_max_idx: 10
+# use netvlad for loop detection
+loop_use_netvlad: 1
+# path to netvlad onnx model
+netvlad_onnx_path: "/datasets/netvlad_db.onnx"
+# number of images to keep in netvlad history
+netvlad_history_size: 1024
+# netvlad threshold for loop detection
+netvlad_threshold: 0.5
