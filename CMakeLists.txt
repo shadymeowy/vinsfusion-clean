@@ -67,6 +67,9 @@ find_package(OpenCV REQUIRED)
 find_package(Ceres REQUIRED)
 find_package(Eigen3 REQUIRED)
 
+# ONNX Runtime
+set(ONNXRUNTIME_DIR /opt/netvlad/onnxruntime-linux-x64-gpu-1.22.0)
+
 ## Include directories
 include_directories(
   include
@@ -74,7 +77,10 @@ include_directories(
   ${OpenCV_INCLUDE_DIRS}
   ${CERES_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIR}
+  ${ONNXRUNTIME_DIR}/include
 )
+
+link_directories(${ONNXRUNTIME_DIR}/lib)
 
 ## Map Ceres and Eigen3 variables for catkin_package
 # Ceres
@@ -143,6 +149,7 @@ add_executable(
   src/loop_fusion/keyframe.cpp
   src/loop_fusion/parameters.cpp
   src/loop_fusion/utility/CameraPoseVisualization.cpp
+  src/loop_fusion/netvladdb.cpp
   src/DBoW/BowVector.cpp
   src/DBoW/FBrief.cpp
   src/DBoW/FeatureVector.cpp
@@ -165,6 +172,7 @@ target_link_libraries(loop_fusion_node
   ${catkin_LIBRARIES}
   ${OpenCV_LIBS}
   ${CERES_LIBRARIES}
+  onnxruntime
 )
 
 add_executable(
