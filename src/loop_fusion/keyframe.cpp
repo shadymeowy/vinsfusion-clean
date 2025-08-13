@@ -467,6 +467,16 @@ reduceVector(matched_id, status);
                 .toImageMsg();
         msg->header.stamp = ros::Time(time_stamp);
         pub_match_img.publish(msg);
+
+        // write timestamps and idx to loop_debug_path
+        std::ofstream floop_debug(params.loop_debug_path, std::ios::app);
+        floop_debug << std::fixed << std::setprecision(15);
+        floop_debug << time_stamp << "," << index << ","
+                   << old_kf->time_stamp << "," << old_kf->index << ","
+                   << matched_2d_cur.size() << "," << matched_2d_old.size()
+                   << std::endl;
+        floop_debug.close();
+        
       }
     }
 #endif

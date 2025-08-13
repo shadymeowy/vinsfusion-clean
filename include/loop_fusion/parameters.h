@@ -98,6 +98,8 @@ struct Parameters {
   bool loop_use_netvlad;
   float netvlad_threshold;
 
+  std::string loop_debug_path;
+
   void read_from_file(const std::string &config_file);
 };
 

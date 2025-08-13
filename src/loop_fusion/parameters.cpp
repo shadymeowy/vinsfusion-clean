@@ -64,6 +64,11 @@ void Parameters::read_from_file(const std::string &config_file) {
   std::ofstream fout(vins_result_path, std::ios::out);
   fout.close();
 
+  loop_debug_path = output_folder + "/loop_debug.csv";
+  std::cout << "loop debug path " << loop_debug_path << std::endl;
+  std::ofstream floop_debug(loop_debug_path, std::ios::out);
+  floop_debug.close();
+
   estimate_extrinsic = fsSettings["estimate_extrinsic"];
   if (estimate_extrinsic == 2) {
     ROS_WARN("have no prior about extrinsic param, calibrate extrinsic param");
