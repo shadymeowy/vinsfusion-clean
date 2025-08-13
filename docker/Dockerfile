@@ -89,3 +89,12 @@ RUN update-alternatives --install \
     /usr/bin/clangd \
     clangd \
     /usr/bin/clangd-18 100
+
+# https://github.com/microsoft/onnxruntime/releases/download/v1.22.0/onnxruntime-linux-x64-gpu-1.22.0.tgz
+RUN mkdir -p /opt/netvlad
+WORKDIR /opt/netvlad
+RUN curl -LO https://github.com/microsoft/onnxruntime/releases/download/v1.22.0/onnxruntime-linux-x64-gpu-1.22.0.tgz
+RUN tar -xzf onnxruntime-linux-x64-gpu-1.22.0.tgz && \
+    rm onnxruntime-linux-x64-gpu-1.22.0.tgz
+# Set ONNXRUNTIME_DIR environment variable
+ENV ONNXRUNTIME_DIR /opt/netvlad/onnxruntime-linux-x64-gpu-1.22.0
