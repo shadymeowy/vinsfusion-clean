@@ -25,6 +25,7 @@
 #include <loop_fusion/utility/CameraPoseVisualization.h>
 #include <loop_fusion/utility/tic_toc.h>
 #include <loop_fusion/utility/utility.h>
+#include <loop_fusion/netvladdb.h>
 #include <nav_msgs/Odometry.h>
 #include <nav_msgs/Path.h>
 #include <ros/ros.h>
@@ -72,8 +73,11 @@ class PoseGraph {
   Vector3d w_t_vio;
   Matrix3d w_r_vio;
 
+  NetVLADDB netvlad_db;
+
  private:
   int detectLoop(KeyFrame *keyframe, int frame_index);
+  int detectLoopNetVLAD(KeyFrame *keyframe, int frame_index);
   void addKeyFrameIntoVoc(KeyFrame *keyframe);
   void optimize4DoF();
   void optimize6DoF();

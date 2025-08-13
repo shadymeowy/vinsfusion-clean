@@ -12,9 +12,14 @@
 
 #include <loop_fusion/pose_graph.h>
 
+#include <vector>
+
 namespace vins::loop_fusion {
 
-PoseGraph::PoseGraph(Parameters &params) : t_optimization(), params(params) {
+PoseGraph::PoseGraph(Parameters &params)
+    : t_optimization(),
+      params(params),
+      netvlad_db("/datasets/netvlad_db.onnx", 2048) {
   posegraph_visualization = new CameraPoseVisualization(1.0, 0.0, 1.0, 1.0);
   posegraph_visualization->setScale(0.1);
   posegraph_visualization->setLineWidth(0.01);
@@ -86,7 +91,7 @@ void PoseGraph::addKeyFrame(KeyFrame *cur_kf, bool flag_detect_loop) {
   int loop_index = -1;
   if (flag_detect_loop) {
     TicToc tmp_t;
-    loop_index = detectLoop(cur_kf, cur_kf->index);
+    loop_index = detectLoopNetVLAD(cur_kf, cur_kf->index);
   } else {
     addKeyFrameIntoVoc(cur_kf);
   }
@@ -217,7 +222,7 @@ void PoseGraph::loadKeyFrame(KeyFrame *cur_kf, bool flag_detect_loop) {
   global_index++;
   int loop_index = -1;
   if (flag_detect_loop)
-    loop_index = detectLoop(cur_kf, cur_kf->index);
+    loop_index = detectLoopNetVLAD(cur_kf, cur_kf->index);
   else {
     addKeyFrameIntoVoc(cur_kf);
   }
@@ -308,6 +313,15 @@ int PoseGraph::detectLoop(KeyFrame *keyframe, int frame_index) {
   QueryResults ret;
   TicToc t_query;
   db.query(keyframe->brief_descriptors, ret, 4, frame_index - 50);
+
+  std::vector<int> best_idx;
+  std::vector<float> best_values;
+  netvlad_db.query(keyframe->image, best_idx, best_values, true);
+  // printt netvlad best indices and values
+  for (size_t i = 0; i < best_idx.size(); ++i) {
+    printf("NetVLADDB: best_idx[%zu] = %d, value = %f\n", i, best_idx[i],
+           best_values[i]);
+  }
   // printf("query time: %f", t_query.toc());
   // cout << "Searching for Image " << frame_index << ". " << ret << endl;
 
@@ -373,6 +387,108 @@ int PoseGraph::detectLoop(KeyFrame *keyframe, int frame_index) {
     return min_index;
   } else
     return -1;
+}
+
+int PoseGraph::detectLoopNetVLAD(KeyFrame *keyframe, int frame_index) {
+  // put image into image_pool; for visualization
+  cv::Mat compressed_image;
+  if (params.save_image) {
+    int feature_num = keyframe->keypoints.size();
+    cv::resize(keyframe->image, compressed_image, cv::Size(376, 240));
+    putText(compressed_image, "feature_num:" + to_string(feature_num),
+            cv::Point2f(10, 10), cv::FONT_HERSHEY_SIMPLEX, 0.4,
+            cv::Scalar(255));
+    image_pool[frame_index] = compressed_image;
+  }
+  TicToc tmp_t;
+  // first query; then add this frame into database!
+  TicToc t_query;
+
+  std::vector<int> best_idx_raw;
+  std::vector<float> best_values_raw;
+  int max_idx = frame_index - 10;
+  if (max_idx < 1) max_idx = 1;
+  netvlad_db.query(keyframe->image.clone(), best_idx_raw, best_values_raw, true,
+                   max_idx);
+  // loop over best_idx and best_values
+  std::vector<int> best_idx;
+  std::vector<float> best_values;
+  for (size_t i = 0; i < best_idx_raw.size(); ++i) {
+    printf("NetVLADDB: best_idx[%zu] = %d, value = %f\n", i, best_idx_raw[i],
+           best_values_raw[i]);
+    if (best_values_raw[i] > 0.5) {
+      best_idx.push_back(best_idx_raw[i]);
+      best_values.push_back(best_values_raw[i]);
+    }
+  }
+
+  if (best_idx.empty()) {
+    std::cout << "No good matches found in NetVLADDB for frame index "
+              << frame_index << std::endl;
+    return -1;  // No good matches found
+  }
+  // printf("query time: %f", t_query.toc());
+  // cout << "Searching for Image " << frame_index << ". " << ret << endl;
+
+  TicToc t_add;
+  // printf("add feature time: %f", t_add.toc());
+  //  ret[0] is the nearest neighbour's score. threshold change with neighour
+  //  score
+  bool find_loop = false;
+  cv::Mat loop_result;
+  if (params.save_image) {
+    loop_result = compressed_image.clone();
+    if (best_idx.size() > 0)
+      putText(loop_result, "neighbour score:" + to_string(best_values[0]),
+              cv::Point2f(10, 50), cv::FONT_HERSHEY_SIMPLEX, 0.5,
+              cv::Scalar(255));
+  }
+  // visual loop result
+  if (params.save_image) {
+    for (unsigned i = 0; i < best_idx.size(); i++) {
+      int tmp_index = best_idx[i];
+      float tmp_value = best_values[i];
+      auto it = image_pool.find(tmp_index);
+      cv::Mat tmp_image = (it->second).clone();
+      putText(tmp_image,
+              "index:  " + to_string(tmp_index) +
+                  "loop score:" + to_string(tmp_value),
+              cv::Point2f(10, 50), cv::FONT_HERSHEY_SIMPLEX, 0.5,
+              cv::Scalar(255));
+      cv::hconcat(loop_result, tmp_image, loop_result);
+    }
+  }
+  // a good match with its neighbour
+  if (best_idx.size() >= 1 && best_values[0] > 0.05)
+    for (unsigned int i = 1; i < best_values.size(); i++) {
+      // if (ret[i].Score > ret[0].Score * 0.3)
+      if (best_values[i] > 0.5) {
+        find_loop = true;
+        int tmp_index = best_idx[i];
+        if (params.save_image) {
+          auto it = image_pool.find(tmp_index);
+          cv::Mat tmp_image = (it->second).clone();
+          putText(tmp_image, "loop score:" + to_string(best_values[i]),
+                  cv::Point2f(10, 50), cv::FONT_HERSHEY_SIMPLEX, 0.4,
+                  cv::Scalar(255));
+          cv::hconcat(loop_result, tmp_image, loop_result);
+        }
+      }
+    }
+  // if (params.save_image) {
+  //   cv::imshow("loop_result", loop_result);
+  //   cv::waitKey(1);
+  // }
+  if (find_loop && frame_index > 50) {
+    int min_index = -1;
+    for (unsigned i = 0; i < best_idx.size(); i++) {
+      if (min_index == -1 ||
+          (static_cast<int>(best_idx[i]) < min_index && best_values[i] > 0.5))
+        min_index = best_idx[i];
+    }
+    return min_index;
+  }
+  return -1;
 }
 
 void PoseGraph::addKeyFrameIntoVoc(KeyFrame *keyframe) {
