@@ -68,6 +68,6 @@ loop_use_netvlad: 1
 # path to netvlad onnx model
 netvlad_onnx_path: "/datasets/netvlad_db.onnx"
 # number of images to keep in netvlad history
-netvlad_history_size: 1024
+netvlad_history_size: 4096
 # netvlad threshold for loop detection
 netvlad_threshold: 0.5
