@@ -193,6 +193,7 @@ class TAPNextTRT:
                 indexing="ij",
             )
         else:
+            query_points = query_points.copy()
             gx, gy = query_points[:, 1], query_points[:, 0]
             gx = gx.reshape(-1, 1)
             gy = gy.reshape(-1, 1)
@@ -208,6 +209,7 @@ class TAPNextTRT:
             .astype(np.float32)
         )
         qp_ptr = int(self.device_buffers["query_points_in"]["device"].ptr)
+        self.stream.synchronize()
         cudart.memcpyAsync(
             qp_ptr,
             qp_np.ctypes.data,
@@ -227,6 +229,7 @@ class TAPNextTRT:
             self.device_buffers["rg_lru_states_in"]["nbytes"],
             self.stream.ptr,
         )
+        self.stream.synchronize()
 
     def warm_up(self):
         # warm-up one frame
@@ -288,6 +291,7 @@ class TAPNextTRT:
 
         # finish capture
         self.graph = self.stream.end_capture()
+        self.stream.synchronize()
 
     def run(self, frame: np.ndarray):
         # preprocess the input frame
@@ -302,13 +306,14 @@ class TAPNextTRT:
         self.host_buffers["step_in"][0] = self.step
 
         # replay the CUDA Graph
+        self.stream.synchronize()
         self.graph.launch(stream=self.stream)
         # synchronize the stream to ensure all operations are complete
         self.stream.synchronize()
 
         # get the output tracks and visibility logits
         trk = self.host_buffers["tracks"].reshape(1, 1, self.n_tracks, 2)[0, 0]
-        trk *= np.array([sy, sx], np.float32)
+        trk = trk * np.array([sy, sx], np.float32)
         vis = self.host_buffers["visible_logits"].reshape(1, 1, self.n_tracks)[0, 0] > 0
 
         # rotate the hidden states
@@ -326,6 +331,7 @@ class TAPNextTRT:
             cudart.memcpyDeviceToDevice,
             self.stream.ptr,
         )
+        self.stream.synchronize()
 
         # increment the step counter
         self.step += 1
