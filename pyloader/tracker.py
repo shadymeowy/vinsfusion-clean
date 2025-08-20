@@ -56,9 +56,9 @@ global_id_counter = 0
 class TrackerTAPNext:
     def __init__(
         self,
-        onnx_path="/datasets/tapnext.onnx",
-        engine_path="/datasets/tapnext_fp16.engine",
-        n_tracks=256,
+        onnx_path="/datasets/tapnext_128.onnx",
+        engine_path="/datasets/tapnext_128_fp16.engine",
+        n_tracks=128,
         reset_every=100,
         other_reset=False,
         outlier_elimination=False,
@@ -82,6 +82,7 @@ class TrackerTAPNext:
         self.map1, self.map2 = cv2.initUndistortRectifyMap(
             K, D, None, self.new_K, img_size, cv2.CV_32FC1
         )
+        self.prev_frame = None
 
     def redistort_points(self, undistorted_pts):
         if len(undistorted_pts) == 0:
@@ -119,12 +120,35 @@ class TrackerTAPNext:
 
         self.width, self.height = frame.shape[1], frame.shape[0]
 
+        # reduce by validity
+        tracks_old = self.tracks[self.is_valid]
+        ids_old = self.ids[self.is_valid]
+        cnt_old = self.cnt[self.is_valid]
+        n_old = len(tracks_old)
+
+        # prioritize old tracks
+        responses_old = cnt_old * np.ones(
+            len(tracks_old), dtype=np.float32
+        ) + 1000
+
+        # generate new query pointsgam
         kpts, responses = self.detect_keypoints(frame)
         print(f"Detected {len(kpts)} keypoints in the first frame.")
 
+        candidate_kpts = np.concatenate([tracks_old, kpts], axis=0)
+        candidate_responses = np.concatenate([responses_old, responses], axis=0)
+        candidate_ids = np.concatenate(
+            [ids_old, -1 * np.ones(len(kpts), dtype=np.int32)],
+            axis=0,
+        )
+        candidate_cnt = np.concatenate(
+            [cnt_old, np.zeros(len(kpts), dtype=np.int32)],
+            axis=0,
+        )
+
         idx = square_covering_adaptive_nms(
-            kpts[:, [1, 0]],
-            responses,
+            candidate_kpts[:, [1, 0]],
+            candidate_responses,
             self.width,
             self.height,
             target_num_kpts=self.n_tracks,
@@ -133,29 +157,47 @@ class TrackerTAPNext:
             max_num_iter=10,
         )[: self.n_tracks]
 
-        kpts = kpts[idx]
+        if len(idx) < self.n_tracks:
+            diff_idx = np.setdiff1d(np.arange(len(candidate_kpts)), idx)[
+                : self.n_tracks - len(idx)
+            ]
+            idx = np.concatenate([idx, diff_idx])
 
-        if len(kpts) < self.n_tracks:
-            # create random keypoints if not enough are detected
-            kpts_rand = np.random.rand(self.n_tracks - len(kpts), 2) * np.array(
-                [self.height, self.width]
-            )
-            kpts = np.vstack((kpts, kpts_rand))
+        idx_old = idx[idx < n_old]
+        idx_new = idx[idx >= n_old]
 
-        self.ids = np.arange(
-            global_id_counter, global_id_counter + len(kpts), dtype=np.int32
+        mask_old = np.zeros(len(candidate_kpts), dtype=np.bool_)
+        mask_old[idx_old] = True
+        # count_old = len(idx_old)
+        kpts_old = candidate_kpts[mask_old]
+        ids_old = candidate_ids[mask_old]
+        cnt_old = candidate_cnt[mask_old]
+
+        mask_new = np.zeros(len(candidate_kpts), dtype=np.bool_)
+        mask_new[idx_new] = True
+        count_new = len(idx_new)
+        kpts_new = candidate_kpts[mask_new]
+        ids_new = np.arange(
+            global_id_counter, global_id_counter + count_new, dtype=np.int32
         )
-        global_id_counter += len(kpts)
-        self.cnt = np.zeros(len(kpts), dtype=np.int32)
-        self.is_valid = np.ones(len(kpts), dtype=np.bool_)
+        cnt_new = np.zeros(count_new, dtype=np.int32)
+        global_id_counter += count_new
 
-        # Generate query points from the first frame
-        self.model.reset(width=self.width, height=self.height, query_points=kpts.copy())
+        self.tracks = np.concatenate([kpts_old, kpts_new], axis=0)
+        self.tracks_prev = self.tracks.copy()
+        self.ids = np.concatenate([ids_old, ids_new], axis=0)
+        self.is_valid = np.ones(len(self.tracks), dtype=np.bool_)
+        self.cnt = np.concatenate([cnt_old, cnt_new], axis=0)
 
-        self.tracks_prev = kpts.copy()
-        self.tracks = kpts.copy()
+        # ensure every id is unique
+        assert len(self.ids) == np.unique(self.ids).size, (
+            "Duplicate IDs found in tracks."
+        )
 
+        # Reset model with new query points
         self.last_reset = 0
+        self.model.reset(width=self.width, height=self.height, query_points=self.tracks)
+        self.model.run(self.prev_frame)
 
     def track_image(self, frame_dist, max_cnt=None):
         global global_id_counter
@@ -167,7 +209,7 @@ class TrackerTAPNext:
 
         if self.is_first_frame:
             self.is_first_frame = False
-            self.reset(frame)
+            return self.first_frame(frame)
         else:
             if self.last_reset >= self.reset_every:
                 print(
@@ -180,6 +222,10 @@ class TrackerTAPNext:
                 cond_max_x = self.tracks[:, 1].min() > self.width * 0.3
                 cond_min_y = self.tracks[:, 0].max() < self.height * 0.7
                 cond_max_y = self.tracks[:, 0].min() > self.height * 0.3
+                # wx = self.tracks[:, 1].max() - self.tracks[:, 1].min()
+                # wy = self.tracks[:, 0].max() - self.tracks[:, 0].min()
+                # wxy = wx * wy / (self.width * self.height)
+                # cond_wxy = wxy < 0.7
                 if (
                     self.last_reset >= 10
                     and np.sum(self.is_valid) < self.n_tracks * 0.1
@@ -245,8 +291,64 @@ class TrackerTAPNext:
         pts = self.redistort_points(pts)
         x_valid, y_valid = pts[:, 0], pts[:, 1]
 
+        self.prev_frame = frame
+
         return x_valid, y_valid, ids_valid, cnt_valid
 
+    def first_frame(self, frame):
+        global global_id_counter
+        kpts, responses = self.detect_keypoints(frame)
+        print(f"Detected {len(kpts)} keypoints in the first frame.")
+
+        self.width, self.height = frame.shape[1], frame.shape[0]
+
+        idx = square_covering_adaptive_nms(
+            kpts[:, [1, 0]],
+            responses,
+            self.width,
+            self.height,
+            target_num_kpts=self.n_tracks,
+            up_tol=10,
+            indices_only=True,
+            max_num_iter=100,
+        )[: self.n_tracks]
+        kpts = kpts[idx]
+        responses = responses[idx]
+
+        global_id_counter += len(kpts)
+        self.ids = np.arange(len(kpts), dtype=np.int32)
+        self.cnt = np.zeros(len(kpts), dtype=np.int32)
+        self.is_valid = np.ones(len(kpts), dtype=np.bool_)
+
+        # Generate query points from the first frame
+        self.model.reset(width=self.width, height=self.height, query_points=kpts)
+        self.model.run(frame)
+
+        self.tracks_prev = kpts.copy()
+        self.tracks = kpts.copy()
+
+        self.last_reset = 0
+
+        x = self.tracks[:, 1]
+        y = self.tracks[:, 0]
+        ids = self.ids.copy()
+        cnt = self.cnt.copy()
+
+        # redistort points
+        pts = np.stack([x, y], axis=-1)
+        pts = self.redistort_points(pts)
+        x, y = pts[:, 0], pts[:, 1]
+
+        self.prev_frame = frame
+
+        return x, y, ids, cnt
+
+    def set_outliers(self, ids):
+        print("set_outliers called", ids)
+        # using self.ids, find which idx they are
+        idx = np.isin(self.ids, ids)
+        print("Outlier indices:", np.where(idx)[0])
+        self.is_valid[idx] = False
 
 class TrackerKLT:
     def __init__(self):
@@ -415,9 +517,12 @@ class TrackerKLT:
         return x_out, y_out, ids_out, cnt_out
 
 
+    def set_outliers(self, ids):
+        pass
+
 class TrackerRaw:
     def __init__(self, *args, **kwargs):
-        mode = os.environ.get("TRACKER_MODE", "klt").lower()
+        mode = os.environ.get("TRACKER_MODE", "tapnext_klt").lower()
         if mode == "klt":
             self.tracker1 = None
             self.tracker2 = None
@@ -430,8 +535,56 @@ class TrackerRaw:
                 outlier_elimination=False, other_reset=False, reset_every=25
             )
             self.tracker3 = None
-        elif mode == "tapnext_klt" or mode == "tapnext_klt_7":
+        elif mode == "tapnext_klt_o_512":
             self.tracker1 = TrackerTAPNext(
+                onnx_path="/datasets/tapnext_512.onnx",
+                engine_path="/datasets/tapnext_512_fp16.engine",
+                n_tracks=512,
+                outlier_elimination=True, other_reset=True, reset_every=100
+            )
+            self.tracker2 = TrackerKLT()
+            self.tracker3 = None
+        elif mode == "tapnext_klt_o_256":
+            self.tracker1 = TrackerTAPNext(
+                onnx_path="/datasets/tapnext.onnx",
+                engine_path="/datasets/tapnext_fp16.engine",
+                n_tracks=256,
+                outlier_elimination=True, other_reset=True, reset_every=100
+            )
+            self.tracker2 = TrackerKLT()
+            self.tracker3 = None
+        elif mode == "tapnext_klt_o_128":
+            self.tracker1 = TrackerTAPNext(
+                onnx_path="/datasets/tapnext_128.onnx",
+                engine_path="/datasets/tapnext_128_fp16.engine",
+                n_tracks=128,
+                outlier_elimination=True, other_reset=True, reset_every=100
+            )
+            self.tracker2 = TrackerKLT()
+            self.tracker3 = None
+        elif mode == "tapnext_klt_512":
+            self.tracker1 = TrackerTAPNext(
+                onnx_path="/datasets/tapnext_512.onnx",
+                engine_path="/datasets/tapnext_512_fp16.engine",
+                n_tracks=512,
+                outlier_elimination=False, other_reset=True, reset_every=100
+            )
+            self.tracker2 = TrackerKLT()
+            self.tracker3 = None
+        elif mode == "tapnext_klt_256":
+            self.tracker1 = TrackerTAPNext(
+                onnx_path="/datasets/tapnext.onnx",
+                engine_path="/datasets/tapnext_fp16.engine",
+                n_tracks=256,
+                outlier_elimination=False, other_reset=True, reset_every=100
+            )
+            self.tracker2 = TrackerKLT()
+            self.tracker3 = None
+        elif mode == "tapnext_klt_128":
+            self.tracker1 = TrackerTAPNext(
+                onnx_path="/datasets/tapnext_128.onnx",
+                engine_path="/datasets/tapnext_128_fp16.engine",
+                n_tracks=128,
                 outlier_elimination=False, other_reset=True, reset_every=100
             )
             self.tracker2 = TrackerKLT()
@@ -468,7 +621,7 @@ class TrackerRaw:
             else:
                 x2, y2, ids2, cnt2 = self.dummy()
             x3, y3, ids3, cnt3 = self.dummy()
-        elif self.mode == "tapnext_klt" or self.mode == "tapnext_klt_7":
+        elif self.mode.startswith("tapnext_klt"):
             x1, y1, ids1, cnt1 = self.tracker1.track_image(frame_dist)
             x2, y2, ids2, cnt2 = self.tracker2.track_image(frame_dist)
             x3, y3, ids3, cnt3 = self.dummy()
@@ -491,6 +644,21 @@ class TrackerRaw:
         assert len(unique_ids) == len(ids), "IDs are not unique!"
 
         return x, y, ids, cnt
+
+    def set_outliers(self, ids):
+        print("set_outliers called", ids)
+        if self.mode == "klt":
+            self.tracker3.set_outliers(ids)
+        elif self.mode == "tapnext_double":
+            self.tracker1.set_outliers(ids)
+            self.tracker2.set_outliers(ids)
+        elif self.mode.startswith("tapnext_klt"):
+            self.tracker1.set_outliers(ids)
+            self.tracker2.set_outliers(ids)
+        elif self.mode == "tapnext":
+            self.tracker1.set_outliers(ids)
+        else:
+            raise ValueError(f"Unknown tracker mode: {self.mode}")
 
 
 class TrackerCached:
@@ -592,7 +760,7 @@ def main():
     images = h5["/ovc/left/data"]
     img_size = (images.shape[2], images.shape[1])  # width, height
 
-    tracker = TrackerCached()
+    tracker = Tracker()
     prev_pts_map = None
 
     writer = None
