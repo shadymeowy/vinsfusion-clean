@@ -13,9 +13,11 @@
 #include <vins_estimator/featureTracker/feature_tracker_mono.h>
 #include <vins_estimator/featureTracker/klt_tracker.h>
 
-extern "C" int track_klt_cy(const unsigned char *img, int width, int height, float *x_out, float *y_out,
-               int *ids_out, int *cnt_out,
-               int min_dist, int max_cnt, char flow_back);
+extern "C" int track_klt_cy(const unsigned char *img, int width, int height,
+                            float *x_out, float *y_out, int *ids_out,
+                            int *cnt_out, int min_dist, int max_cnt,
+                            char flow_back);
+extern "C" void set_outliers_cy(int *ids, int len);
 extern "C" void mymodule_init();
 
 namespace vins::estimator {
@@ -25,7 +27,6 @@ FeatureTrackerMono::FeatureTrackerMono(Parameters &params) : params(params) {}
 map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>>
 FeatureTrackerMono::trackImage(double cur_time, const cv::Mat &cur_img,
                                const cv::Mat &) {
-
   TicToc t_r;
 
   vector<float> cur_x(params.max_cnt, 0);
@@ -43,9 +44,9 @@ FeatureTrackerMono::trackImage(double cur_time, const cv::Mat &cur_img,
     mymodule_init();
     init = true;
   }
-  int len = track_klt_cy(
-      cur_img.data, width, height, cur_x.data(), cur_y.data(), ids.data(),
-      track_cnt.data(), params.min_dist, params.max_cnt, params.flow_back);
+  int len = track_klt_cy(cur_img.data, width, height, cur_x.data(),
+                         cur_y.data(), ids.data(), track_cnt.data(),
+                         params.min_dist, params.max_cnt, params.flow_back);
 
   printf("track_klt_cy len: %d, cur_time: %f\n", len, cur_time);
   // resize vectors cur_x, cur_y, ids, track_cnt
@@ -184,4 +185,14 @@ void FeatureTrackerMono::drawTrack(cv::Mat &im_track, const cv::Mat &im,
 
 cv::Mat FeatureTrackerMono::getTrackImage() { return im_track_; }
 
-} // namespace vins::estimator
+void FeatureTrackerMono::removeOutliers(set<int> &removePtsIds) {
+  int *tmp = new int[removePtsIds.size()];
+  int i = 0;
+  for (const auto &id : removePtsIds) {
+    tmp[i++] = id;
+  }
+  set_outliers_cy(tmp, removePtsIds.size());
+  delete[] tmp;
+}
+
+}  // namespace vins::estimator

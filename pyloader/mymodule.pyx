@@ -84,6 +84,31 @@ cdef public int track_klt_cy(const unsigned char *img, int width, int height,
         cnt_out[i] = cnt[i]
     return len(x)
 
+# void set_outliers_cy(int *ids, int len)
+
+cdef public void set_outliers_cy(int *ids, int len):
+    print("set_outliers_cy called")
+
+    global tracker
+    cdef int i, j
+
+    # Convert ids to a numpy array
+    cdef object ids_np = np.empty(len, dtype=np.int32)
+    cdef int[:] ids_arr = ids_np
+
+    for i in range(len):
+        ids_arr[i] = ids[i]
+
+    # Call the tracker
+    try:
+        tracker.set_outliers(ids_arr)
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f"Error during outlier detection: {e}")
+
+    return
+
 import sys
 sys.path.append("/root/catkin_ws/src/VINS-Fusion/pyloader/")
 from tracker import Tracker

@@ -44,11 +44,7 @@ public:
     std::abort();
   }
 
-  void removeOutliers(set<int> &removePtsIds) {
-    std::cerr << "removeOutliers is not implemented for FeatureTrackerMono."
-              << std::endl;
-    std::abort();
-  }
+  static void removeOutliers(set<int> &removePtsIds);
   cv::Mat getTrackImage();
 
 private:
