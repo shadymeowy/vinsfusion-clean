@@ -12,7 +12,7 @@
         <param name="config_path" value="$(arg config_path)" />
     </node>
 
-    <node name="loop_fusion" pkg="vins" type="loop_fusion_node" output="screen">
+    <node name="loop_fusion" pkg="vins" type="loop_fusion_node" output="screen" required="true">
         <param name="config_path" value="$(arg config_path)" />
     </node>
 
