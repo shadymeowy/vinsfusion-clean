@@ -60,10 +60,10 @@ Matcher::Matcher(const std::string &model_path, int width, int height, int n1,
     output_names_.emplace_back(name.get());
   }
 
-  if (num_inputs != 4) {
+  if (num_inputs != 5) {
     throw std::runtime_error(
-        "Matcher: model should have exactly 4 inputs (image1, image2, pts1, "
-        "pts2).");
+        "Matcher: model should have exactly 5 inputs (image1, image2, pts1, "
+        "pts2, threshold).");
   }
   if (num_outputs != 1) {
     throw std::runtime_error(
@@ -129,11 +129,17 @@ Ort::Value Matcher::makePtsTensor(const std::vector<int64_t> &flat_xy) const {
       shape.data(), shape.size());
 }
 
+Ort::Value Matcher::makeScalarTensor(float &scalar) const {
+  std::vector<int64_t> shape = {1};
+  return Ort::Value::CreateTensor<float>(mem_info_cpu_, &scalar, 1,
+                                         shape.data(), shape.size());
+}
+
 void Matcher::toScaledInt64XY(const std::vector<cv::Point2f> &in, double scale,
                               std::vector<int64_t> &out_xy, int n) {
   out_xy.clear();
   out_xy.reserve(n * 2);
-  for (int i = 0; i < n; ++i) {
+  for (int i = 0; i < std::min(n, static_cast<int>(in.size())); ++i) {
     const double xs = in[i].x * scale;
     const double ys = in[i].y * scale;
     out_xy.push_back(static_cast<int64_t>(std::llround(xs)));
@@ -144,13 +150,15 @@ void Matcher::toScaledInt64XY(const std::vector<cv::Point2f> &in, double scale,
 void Matcher::match(const cv::Mat &image1, const cv::Mat &image2,
                     const std::vector<cv::Point2f> &pts1,
                     const std::vector<cv::Point2f> &pts2,
-                    std::vector<int> &id1_to_2) {
+                    std::vector<int> &id1_to_2, float threshold) {
   id1_to_2.clear();
   if (static_cast<int>(pts1.size()) > n1) {
-    std::cout << "Matcher: number of keypoints exceeds n1" << pts1.size() << " > " << n1 << std::endl;
+    std::cout << "Matcher: number of keypoints exceeds n1" << pts1.size()
+              << " > " << n1 << std::endl;
   }
   if (static_cast<int>(pts2.size()) > n2) {
-    std::cout << "Matcher: number of keypoints exceeds n2" << pts2.size() << " > " << n2 << std::endl;
+    std::cout << "Matcher: number of keypoints exceeds n2" << pts2.size()
+              << " > " << n2 << std::endl;
   }
 
   // 1) Preprocess both images and record scales
@@ -164,36 +172,36 @@ void Matcher::match(const cv::Mat &image1, const cv::Mat &image2,
 
   // if pts1_xy size is less than n_keypoint_max_, pad with zeros
   if (pts1_xy.size() < 2 * n1) {
-    std::cout << "Matcher: padding pts1_xy from " << pts1_xy.size() << " to " << 2 * n1 << std::endl;
+    std::cout << "Matcher: padding pts1_xy from " << pts1_xy.size() << " to "
+              << 2 * n1 << std::endl;
     pts1_xy.resize(2 * n1, 0);
   }
   if (pts2_xy.size() < 2 * n2) {
-    std::cout << "Matcher: padding pts2_xy from " << pts2_xy.size() << " to " << 2 * n2 << std::endl;
+    std::cout << "Matcher: padding pts2_xy from " << pts2_xy.size() << " to "
+              << 2 * n2 << std::endl;
     pts2_xy.resize(2 * n2, 0);
   }
 
   // 3) Create tensors (all using the same mem_info_cpu_)
-  Ort::Value image1_tensor = makeImageTensor(pre1);
-  Ort::Value image2_tensor = makeImageTensor(pre2);
-  Ort::Value pts1_tensor = makePtsTensor(pts1_xy);
-  Ort::Value pts2_tensor = makePtsTensor(pts2_xy);
+  static const std::array<const char *, 5> kInputNames = {
+      "image1", "image2", "pts1", "pts2", "threshold"};
+  static const std::array<const char *, 1> kOutputNames = {"matches"};
 
-  // 4) Prepare names
-  std::vector<const char *> input_name_ptrs;
-  input_name_ptrs.reserve(input_names_.size());
-  for (auto &s : input_names_) input_name_ptrs.push_back(s.c_str());
-  std::vector<const char *> output_name_ptrs;
-  output_name_ptrs.reserve(output_names_.size());
-  for (auto &s : output_names_) output_name_ptrs.push_back(s.c_str());
+  // Build tensors (types/shapes must match the model)
+  Ort::Value image1_tensor = makeImageTensor(pre1);  // CV_8UC1 -> uint8 [H1,W1]
+  Ort::Value image2_tensor = makeImageTensor(pre2);  // CV_8UC1 -> uint8 [H2,W2]
+  Ort::Value pts1_tensor = makePtsTensor(pts1_xy);   // int64  -> [256,2]
+  Ort::Value pts2_tensor = makePtsTensor(pts2_xy);   // int64  -> [2048,2]
+  Ort::Value threshold_tensor = makeScalarTensor(threshold);  // float32-> [1]
 
-  // 5) Run
-  std::array<Ort::Value, 4> inputs = {
+  std::array<Ort::Value, 5> input_vals = {
       std::move(image1_tensor), std::move(image2_tensor),
-      std::move(pts1_tensor), std::move(pts2_tensor)};
+      std::move(pts1_tensor), std::move(pts2_tensor),
+      std::move(threshold_tensor)};
 
-  auto outputs = session_.Run(Ort::RunOptions{nullptr}, input_name_ptrs.data(),
-                              inputs.data(), inputs.size(),
-                              output_name_ptrs.data(), output_name_ptrs.size());
+  auto outputs = session_.Run(Ort::RunOptions{nullptr}, kInputNames.data(),
+                              input_vals.data(), input_vals.size(),
+                              kOutputNames.data(), kOutputNames.size());
 
   if (outputs.size() != 1) {
     throw std::runtime_error("Matcher: unexpected number of outputs.");
@@ -218,4 +226,11 @@ void Matcher::match(const cv::Mat &image1, const cv::Mat &image2,
   }
   // trim to original pts1 size
   id1_to_2.resize(pts1.size());
+
+  // replace out of bounds pts2 with -1
+  for (size_t i = 0; i < id1_to_2.size(); ++i) {
+    if (id1_to_2[i] < 0 || id1_to_2[i] >= static_cast<int>(pts2.size())) {
+      id1_to_2[i] = -1;
+    }
+  }
 }

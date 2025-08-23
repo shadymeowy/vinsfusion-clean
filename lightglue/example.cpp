@@ -53,9 +53,11 @@ static void visualize(const cv::Mat &image1, const cv::Mat &image2,
   }
 
   // 2) matched pairs in HSV-derived colors (no lines)
+  int counter = 0;
   for (size_t i = 0; i < N; ++i) {
     int j = matches[i];
     if (j == -1 || static_cast<size_t>(j) >= pts2.size()) continue;
+    counter++;
 
     int x1 = static_cast<int>(std::lround(pts1[i].x));
     int y1 = static_cast<int>(std::lround(pts1[i].y));
@@ -73,6 +75,8 @@ static void visualize(const cv::Mat &image1, const cv::Mat &image2,
     cv::circle(concat, {x2 + image1.cols, y2}, 3, color_bgr, -1);
   }
 
+  std::cout << "Number of valid matches: " << counter << std::endl;
+
   cv::imshow("Matches", concat);
   cv::imwrite("assets/matches.png", concat);
   cv::waitKey(0);
@@ -83,10 +87,11 @@ int main() {
   try {
     const std::string path_image1 = "assets/1.png";
     const std::string path_image2 = "assets/2.png";
-    const std::string model_path = "/datasets/superpoint_lightglue_end2end.onnx";
+    const std::string model_path = "/run/media/tdemirdal/tb/superpoint_lightglue_dynamic.onnx";
 
     // Network input geometry
     const int W = 240, H = 512, Nmax1 = 256, Nmax2 = 2048;
+    const float threshold = 0.1f;
 
     // Load ORIGINAL images (any size); matcher will preprocess internally
     cv::Mat img1 = cv::imread(path_image1, cv::IMREAD_COLOR);
@@ -101,12 +106,10 @@ int main() {
     // Run matcher (internally preprocesses + scales keypoints)
     Matcher matcher(model_path, W, H, Nmax1, Nmax2);
     std::vector<int> id1_to_2;
-    matcher.match(img1, img2, kpts1, kpts2, id1_to_2);
+    matcher.match(img1, img2, kpts1, kpts2, id1_to_2, threshold);
 
     std::cout << "Matches size: " << id1_to_2.size() << std::endl;
 
-    // Visualize in ORIGINAL coordinates (no rescale needed since we draw by
-    // index)
     visualize(img1, img2, kpts1, kpts2, id1_to_2);
     return 0;
   } catch (const std::exception &e) {
