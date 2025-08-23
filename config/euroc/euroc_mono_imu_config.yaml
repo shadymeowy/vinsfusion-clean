@@ -74,8 +74,9 @@ netvlad_history_size: 4096
 netvlad_threshold: 0.5
 
 # matcher parameters
-matcher_model_path: "/datasets/superpoint_lightglue_end2end.onnx"
+matcher_model_path: "/datasets/superpoint_lightglue_dynamic.onnx"
 matcher_width: 752
 matcher_height: 480
 matcher_num_features1: 150
 matcher_num_features2: 2048
+matcher_threshold: 0.4
