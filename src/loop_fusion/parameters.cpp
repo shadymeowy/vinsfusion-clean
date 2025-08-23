@@ -246,6 +246,60 @@ void Parameters::read_from_file(const std::string &config_file) {
     fsSettings["netvlad_threshold"] >> netvlad_threshold;
   }
 
+  if (fsSettings["matcher_width"].empty()) {
+    std::cerr << "ERROR: matcher_width not set in config file, "
+                 "defaulting to 512"
+              << std::endl;
+    matcher_width = 512;
+  } else {
+    fsSettings["matcher_width"] >> matcher_width;
+  }
+
+  if (fsSettings["matcher_height"].empty()) {
+    std::cerr << "ERROR: matcher_height not set in config file, "
+                 "defaulting to 512"
+              << std::endl;
+    matcher_height = 512;
+  } else {
+    fsSettings["matcher_height"] >> matcher_height;
+  }
+
+  if (fsSettings["matcher_num_features1"].empty()) {
+    std::cerr << "ERROR: matcher_num_features1 not set in config file, "
+                 "defaulting to 150"
+              << std::endl;
+    matcher_num_features1 = 150;
+  } else {
+    fsSettings["matcher_num_features1"] >> matcher_num_features1;
+  }
+
+  if (fsSettings["matcher_num_features2"].empty()) {
+    std::cerr << "ERROR: matcher_num_features2 not set in config file, "
+                 "defaulting to 150"
+              << std::endl;
+    matcher_num_features2 = 2048;
+  } else {
+    fsSettings["matcher_num_features2"] >> matcher_num_features2;
+  }
+
+  if (fsSettings["matcher_model_path"].empty()) {
+    std::cerr << "ERROR: matcher_model_path not set in config file, "
+                 "defaulting to empty string"
+              << std::endl;
+    matcher_model_path = "";
+  } else {
+    fsSettings["matcher_model_path"] >> matcher_model_path;
+  }
+
+  if (fsSettings["loop_use_matcher"].empty()) {
+    std::cerr << "ERROR: loop_use_matcher not set in config file, "
+                 "defaulting to false"
+              << std::endl;
+    loop_use_matcher = false;
+  } else {
+    fsSettings["loop_use_matcher"] >> loop_use_matcher;
+  }
+
   fsSettings.release();
 
   std::cout << "loss type: " << loss_type

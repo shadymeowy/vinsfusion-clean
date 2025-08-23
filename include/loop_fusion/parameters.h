@@ -93,10 +93,18 @@ struct Parameters {
   double loss_parameter_initial;
 
   int loop_max_idx;
+  bool loop_use_netvlad;
+  bool loop_use_matcher;
+
   std::string netvlad_onnx_path;
   int netvlad_history_size;
-  bool loop_use_netvlad;
   float netvlad_threshold;
+
+  int matcher_width;
+  int matcher_height;
+  int matcher_num_features1;
+  int matcher_num_features2;
+  std::string matcher_model_path;
 
   std::string loop_debug_path;
 
