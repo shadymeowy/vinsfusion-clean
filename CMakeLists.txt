@@ -150,6 +150,7 @@ add_executable(
   src/loop_fusion/parameters.cpp
   src/loop_fusion/utility/CameraPoseVisualization.cpp
   src/loop_fusion/netvladdb.cpp
+  src/loop_fusion/matcher.cpp
   src/DBoW/BowVector.cpp
   src/DBoW/FBrief.cpp
   src/DBoW/FeatureVector.cpp
