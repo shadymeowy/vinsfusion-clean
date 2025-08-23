@@ -62,12 +62,20 @@ pose_graph_save_path: "/root/catkin_ws/src/VINS-Fusion/output/pose_graph/" # sav
 save_image: 1                   # save image in pose graph for visualization prupose; you can close this function by setting 0 
 
 # max number of loop candidates
-loop_max_idx: 10
+loop_max_idx: 50
 # use netvlad for loop detection
 loop_use_netvlad: 1
-# path to netvlad onnx model
+# use onnx matcher
+loop_use_matcher: 1
+
+# netvlad parameters
 netvlad_onnx_path: "/datasets/netvlad_db.onnx"
-# number of images to keep in netvlad history
 netvlad_history_size: 4096
-# netvlad threshold for loop detection
 netvlad_threshold: 0.5
+
+# matcher parameters
+matcher_model_path: "/datasets/superpoint_lightglue_end2end.onnx"
+matcher_width: 752
+matcher_height: 480
+matcher_num_features1: 150
+matcher_num_features2: 2048
