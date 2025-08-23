@@ -19,7 +19,9 @@ namespace vins::loop_fusion {
 PoseGraph::PoseGraph(Parameters &params)
     : t_optimization(),
       params(params),
-      netvlad_db(params.netvlad_onnx_path, params.netvlad_history_size) {
+      netvlad_db(params.netvlad_onnx_path, params.netvlad_history_size),
+      matcher(params.matcher_model_path, params.matcher_width,
+              params.matcher_height, params.matcher_num_features1, params.matcher_num_features2) {
   posegraph_visualization = new CameraPoseVisualization(1.0, 0.0, 1.0, 1.0);
   posegraph_visualization->setScale(0.1);
   posegraph_visualization->setLineWidth(0.01);
@@ -489,8 +491,8 @@ int PoseGraph::detectLoopNetVLAD(KeyFrame *keyframe, int frame_index) {
   if (find_loop && frame_index > params.loop_max_idx) {
     int min_index = -1;
     for (unsigned i = 0; i < best_idx.size(); i++) {
-      if (min_index == -1 ||
-          (static_cast<int>(best_idx[i]) < min_index && best_values[i] > params.netvlad_threshold))
+      if (min_index == -1 || (static_cast<int>(best_idx[i]) < min_index &&
+                              best_values[i] > params.netvlad_threshold))
         min_index = best_idx[i];
     }
     return min_index;
@@ -1099,9 +1101,10 @@ void PoseGraph::loadPoseGraph() {
     brief_file.close();
     fclose(keypoints_file);
 
-    KeyFrame *keyframe = new KeyFrame(
-        time_stamp, index, VIO_T, VIO_R, PG_T, PG_R, image, loop_index,
-        loop_info, keypoints, keypoints_norm, brief_descriptors, params);
+    KeyFrame *keyframe =
+        new KeyFrame(time_stamp, index, VIO_T, VIO_R, PG_T, PG_R, image,
+                     loop_index, loop_info, keypoints, keypoints_norm,
+                     brief_descriptors, params, matcher);
     loadKeyFrame(keyframe, 0);
     if (cnt % 20 == 0) {
       publish();

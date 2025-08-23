@@ -11,6 +11,9 @@
  *******************************************************/
 
 #include <loop_fusion/keyframe.h>
+#include <loop_fusion/matcher.h>
+
+#include <cstdio>
 
 namespace vins::loop_fusion {
 
@@ -28,8 +31,9 @@ KeyFrame::KeyFrame(double _time_stamp, int _index, Vector3d &_vio_T_w_i,
                    vector<cv::Point3f> &_point_3d,
                    vector<cv::Point2f> &_point_2d_uv,
                    vector<cv::Point2f> &_point_2d_norm,
-                   vector<double> &_point_id, int _sequence, Parameters &params)
-    : params(params) {
+                   vector<double> &_point_id, int _sequence, Parameters &params,
+                   Matcher &matcher)
+    : params(params), matcher(matcher) {
   time_stamp = _time_stamp;
   index = _index;
   vio_T_w_i = _vio_T_w_i;
@@ -63,8 +67,8 @@ KeyFrame::KeyFrame(double _time_stamp, int _index, Vector3d &_vio_T_w_i,
                    vector<cv::KeyPoint> &_keypoints,
                    vector<cv::KeyPoint> &_keypoints_norm,
                    vector<BRIEF::bitset> &_brief_descriptors,
-                   Parameters &params)
-    : params(params) {
+                   Parameters &params, Matcher &matcher)
+    : params(params), matcher(matcher) {
   time_stamp = _time_stamp;
   index = _index;
   // vio_T_w_i = _vio_T_w_i;
@@ -103,11 +107,15 @@ void KeyFrame::computeWindowBRIEFPoint() {
 void KeyFrame::computeBRIEFPoint() {
   BriefExtractor extractor(BRIEF_PATTERN_FILE.c_str());
   const int fast_th = 20;  // corner detector response threshold
-  if (1)
+  if (1) {
     cv::FAST(image, keypoints, fast_th, true);
-  else {
+    if (params.loop_use_matcher) {
+      cv::KeyPointsFilter::retainBest(keypoints, params.matcher_num_features2);
+    }
+  } else {
     vector<cv::Point2f> tmp_pts;
-    cv::goodFeaturesToTrack(image, tmp_pts, 500, 0.01, 10);
+    cv::goodFeaturesToTrack(image, tmp_pts, params.matcher_num_features2, 0.01,
+                            10);
     for (int i = 0; i < (int)tmp_pts.size(); i++) {
       cv::KeyPoint key;
       key.pt = tmp_pts[i];
@@ -172,6 +180,40 @@ void KeyFrame::searchByBRIEFDes(
     matched_2d_old.push_back(pt);
     matched_2d_old_norm.push_back(pt_norm);
   }
+}
+
+void KeyFrame::searchByBRIEFDesONNX(
+    std::vector<cv::Point2f> &matched_2d_old,
+    std::vector<cv::Point2f> &matched_2d_old_norm, std::vector<uchar> &status,
+    KeyFrame *old_kf) {
+  // Create necessary input vectors
+  std::vector<cv::Point2f> pts1;
+  std::vector<cv::Point2f> pts2;
+  for (const auto &p : window_keypoints) {
+    pts1.push_back(p.pt);
+  }
+  for (int i = 0; i < old_kf->keypoints.size(); i++) {
+    pts2.push_back(old_kf->keypoints[i].pt);
+  }
+  std::cout << "Matching " << pts1.size() << " to " << pts2.size() << std::endl;
+  std::vector<int> id1_to_2;
+  // Match two keyframes
+  matcher.match(image, old_kf->image, pts1, pts2, id1_to_2);
+  int counter = 0;
+  for (int &i : id1_to_2) {
+    if (i >= 0) {
+      counter++;
+      status.push_back(1);
+      matched_2d_old.push_back(old_kf->keypoints[i].pt);
+      matched_2d_old_norm.push_back(old_kf->keypoints_norm[i].pt);
+    } else {
+      status.push_back(0);
+      matched_2d_old.emplace_back(0.f, 0.f);
+      matched_2d_old_norm.emplace_back(0.f, 0.f);
+    }
+  }
+  std::cout << "Matching returned " << counter << " / " << id1_to_2.size()
+            << std::endl;
 }
 
 void KeyFrame::FundmantalMatrixRANSAC(
@@ -266,35 +308,14 @@ bool KeyFrame::findConnection(KeyFrame *old_kf) {
   matched_id = point_id;
 
   TicToc t_match;
-#if 0
-		if (params.save_image)    
-	    {
-	        cv::Mat gray_img, loop_match_img;
-	        cv::Mat old_img = old_kf->image;
-	        cv::hconcat(image, old_img, gray_img);
-	        cvtColor(gray_img, loop_match_img, cv::COLOR_GRAY2RGB);
-	        for(int i = 0; i< (int)point_2d_uv.size(); i++)
-	        {
-	            cv::Point2f cur_pt = point_2d_uv[i];
-	            cv::circle(loop_match_img, cur_pt, 5, cv::Scalar(0, 255, 0));
-	        }
-	        for(int i = 0; i< (int)old_kf->keypoints.size(); i++)
-	        {
-	            cv::Point2f old_pt = old_kf->keypoints[i].pt;
-	            old_pt.x += params.col;
-	            cv::circle(loop_match_img, old_pt, 5, cv::Scalar(0, 255, 0));
-	        }
-	        ostringstream path;
-	        path << "/home/tony-ws1/raw_data/loop_image/"
-	                << index << "-"
-	                << old_kf->index << "-" << "0raw_point.jpg";
-	        cv::imwrite( path.str().c_str(), loop_match_img);
-	    }
-#endif
   // printf("search by des\n");
-  searchByBRIEFDes(matched_2d_old, matched_2d_old_norm, status,
-                   old_kf->brief_descriptors, old_kf->keypoints,
-                   old_kf->keypoints_norm);
+  if (params.loop_use_matcher) {
+    searchByBRIEFDesONNX(matched_2d_old, matched_2d_old_norm, status, old_kf);
+  } else {
+    searchByBRIEFDes(matched_2d_old, matched_2d_old_norm, status,
+                     old_kf->brief_descriptors, old_kf->keypoints,
+                     old_kf->keypoints_norm);
+  }
   reduceVector(matched_2d_cur, status);
   reduceVector(matched_2d_old, status);
   reduceVector(matched_2d_cur_norm, status);
@@ -303,97 +324,10 @@ bool KeyFrame::findConnection(KeyFrame *old_kf) {
   reduceVector(matched_id, status);
   // printf("search by des finish\n");
 
-#if 0 
-		if (params.save_image)
-	    {
-			int gap = 10;
-        	cv::Mat gap_image(params.row, gap, CV_8UC1, cv::Scalar(255, 255, 255));
-            cv::Mat gray_img, loop_match_img;
-            cv::Mat old_img = old_kf->image;
-            cv::hconcat(image, gap_image, gap_image);
-            cv::hconcat(gap_image, old_img, gray_img);
-            cvtColor(gray_img, loop_match_img, cv::COLOR_GRAY2RGB);
-	        for(int i = 0; i< (int)matched_2d_cur.size(); i++)
-	        {
-	            cv::Point2f cur_pt = matched_2d_cur[i];
-	            cv::circle(loop_match_img, cur_pt, 5, cv::Scalar(0, 255, 0));
-	        }
-	        for(int i = 0; i< (int)matched_2d_old.size(); i++)
-	        {
-	            cv::Point2f old_pt = matched_2d_old[i];
-	            old_pt.x += (params.col + gap);
-	            cv::circle(loop_match_img, old_pt, 5, cv::Scalar(0, 255, 0));
-	        }
-	        for (int i = 0; i< (int)matched_2d_cur.size(); i++)
-	        {
-	            cv::Point2f old_pt = matched_2d_old[i];
-	            old_pt.x +=  (params.col + gap);
-	            cv::line(loop_match_img, matched_2d_cur[i], old_pt, cv::Scalar(0, 255, 0), 1, 8, 0);
-	        }
+  std::cout << "Matched and filtered" << matched_2d_cur.size() << std::endl;
 
-	        ostringstream path, path1, path2;
-	        path <<  "/home/tony-ws1/raw_data/loop_image/"
-	                << index << "-"
-	                << old_kf->index << "-" << "1descriptor_match.jpg";
-	        cv::imwrite( path.str().c_str(), loop_match_img);
-	        /*
-	        path1 <<  "/home/tony-ws1/raw_data/loop_image/"
-	                << index << "-"
-	                << old_kf->index << "-" << "1descriptor_match_1.jpg";
-	        cv::imwrite( path1.str().c_str(), image);
-	        path2 <<  "/home/tony-ws1/raw_data/loop_image/"
-	                << index << "-"
-	                << old_kf->index << "-" << "1descriptor_match_2.jpg";
-	        cv::imwrite( path2.str().c_str(), old_img);	        
-	        */
-	        
-	    }
-#endif
   status.clear();
-/*
-FundmantalMatrixRANSAC(matched_2d_cur_norm, matched_2d_old_norm, status);
-reduceVector(matched_2d_cur, status);
-reduceVector(matched_2d_old, status);
-reduceVector(matched_2d_cur_norm, status);
-reduceVector(matched_2d_old_norm, status);
-reduceVector(matched_3d, status);
-reduceVector(matched_id, status);
-*/
-#if 0
-		if (params.save_image)
-	    {
-			int gap = 10;
-        	cv::Mat gap_image(params.row, gap, CV_8UC1, cv::Scalar(255, 255, 255));
-            cv::Mat gray_img, loop_match_img;
-            cv::Mat old_img = old_kf->image;
-            cv::hconcat(image, gap_image, gap_image);
-            cv::hconcat(gap_image, old_img, gray_img);
-            cvtColor(gray_img, loop_match_img, cv::COLOR_GRAY2RGB);
-	        for(int i = 0; i< (int)matched_2d_cur.size(); i++)
-	        {
-	            cv::Point2f cur_pt = matched_2d_cur[i];
-	            cv::circle(loop_match_img, cur_pt, 5, cv::Scalar(0, 255, 0));
-	        }
-	        for(int i = 0; i< (int)matched_2d_old.size(); i++)
-	        {
-	            cv::Point2f old_pt = matched_2d_old[i];
-	            old_pt.x += (params.col + gap);
-	            cv::circle(loop_match_img, old_pt, 5, cv::Scalar(0, 255, 0));
-	        }
-	        for (int i = 0; i< (int)matched_2d_cur.size(); i++)
-	        {
-	            cv::Point2f old_pt = matched_2d_old[i];
-	            old_pt.x +=  (params.col + gap) ;
-	            cv::line(loop_match_img, matched_2d_cur[i], old_pt, cv::Scalar(0, 255, 0), 1, 8, 0);
-	        }
 
-	        ostringstream path;
-	        path <<  "/home/tony-ws1/raw_data/loop_image/"
-	                << index << "-"
-	                << old_kf->index << "-" << "2fundamental_match.jpg";
-	        cv::imwrite( path.str().c_str(), loop_match_img);
-	    }
-#endif
   Eigen::Vector3d PnP_T_old;
   Eigen::Matrix3d PnP_R_old;
   Eigen::Vector3d relative_t;
@@ -408,7 +342,7 @@ reduceVector(matched_id, status);
     reduceVector(matched_2d_old_norm, status);
     reduceVector(matched_3d, status);
     reduceVector(matched_id, status);
-#if 1
+
     if (params.save_image) {
       int gap = 10;
       cv::Mat gap_image(params.row, gap, CV_8UC1, cv::Scalar(255, 255, 255));
@@ -471,15 +405,12 @@ reduceVector(matched_id, status);
         // write timestamps and idx to loop_debug_path
         std::ofstream floop_debug(params.loop_debug_path, std::ios::app);
         floop_debug << std::fixed << std::setprecision(15);
-        floop_debug << time_stamp << "," << index << ","
-                   << old_kf->time_stamp << "," << old_kf->index << ","
-                   << matched_2d_cur.size() << "," << matched_2d_old.size()
-                   << std::endl;
+        floop_debug << time_stamp << "," << index << "," << old_kf->time_stamp
+                    << "," << old_kf->index << "," << matched_2d_cur.size()
+                    << "," << matched_2d_old.size() << std::endl;
         floop_debug.close();
-        
       }
     }
-#endif
   }
 
   if ((int)matched_2d_cur.size() > MIN_LOOP_NUM) {

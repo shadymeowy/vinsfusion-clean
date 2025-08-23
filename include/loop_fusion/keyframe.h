@@ -17,6 +17,7 @@
 #include <camodocal/camera_models/CameraFactory.h>
 #include <camodocal/camera_models/CataCamera.h>
 #include <camodocal/camera_models/PinholeCamera.h>
+#include <loop_fusion/matcher.h>
 #include <loop_fusion/parameters.h>
 #include <loop_fusion/utility/tic_toc.h>
 #include <loop_fusion/utility/utility.h>
@@ -50,7 +51,7 @@ class KeyFrame {
            Matrix3d &_vio_R_w_i, cv::Mat &_image,
            vector<cv::Point3f> &_point_3d, vector<cv::Point2f> &_point_2d_uv,
            vector<cv::Point2f> &_point_2d_normal, vector<double> &_point_id,
-           int _sequence, Parameters &params);
+           int _sequence, Parameters &params, Matcher &matcher);
 
   KeyFrame(double _time_stamp, int _index, Vector3d &_vio_T_w_i,
            Matrix3d &_vio_R_w_i, Vector3d &_T_w_i, Matrix3d &_R_w_i,
@@ -58,7 +59,8 @@ class KeyFrame {
            Eigen::Matrix<double, 8, 1> &_loop_info,
            vector<cv::KeyPoint> &_keypoints,
            vector<cv::KeyPoint> &_keypoints_norm,
-           vector<BRIEF::bitset> &_brief_descriptors, Parameters &params);
+           vector<BRIEF::bitset> &_brief_descriptors, Parameters &params,
+           Matcher &matcher);
 
   bool findConnection(KeyFrame *old_kf);
   void computeWindowBRIEFPoint();
@@ -76,6 +78,9 @@ class KeyFrame {
                         const std::vector<BRIEF::bitset> &descriptors_old,
                         const std::vector<cv::KeyPoint> &keypoints_old,
                         const std::vector<cv::KeyPoint> &keypoints_old_norm);
+  void searchByBRIEFDesONNX(std::vector<cv::Point2f> &matched_2d_old,
+                            std::vector<cv::Point2f> &matched_2d_old_norm,
+                            std::vector<uchar> &status, KeyFrame *old_kf);
   void FundmantalMatrixRANSAC(
       const std::vector<cv::Point2f> &matched_2d_cur_norm,
       const std::vector<cv::Point2f> &matched_2d_old_norm,
@@ -96,6 +101,7 @@ class KeyFrame {
   Eigen::Quaterniond getLoopRelativeQ();
 
   Parameters &params;
+  Matcher &matcher;
 
   double time_stamp;
   int index;

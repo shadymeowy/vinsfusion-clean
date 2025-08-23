@@ -26,6 +26,7 @@
 #include <loop_fusion/utility/tic_toc.h>
 #include <loop_fusion/utility/utility.h>
 #include <loop_fusion/netvladdb.h>
+#include <loop_fusion/matcher.h>
 #include <nav_msgs/Odometry.h>
 #include <nav_msgs/Path.h>
 #include <ros/ros.h>
@@ -74,6 +75,7 @@ class PoseGraph {
   Matrix3d w_r_vio;
 
   NetVLADDB netvlad_db;
+  Matcher matcher;
 
  private:
   int detectLoop(KeyFrame *keyframe, int frame_index);

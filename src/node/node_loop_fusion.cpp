@@ -325,9 +325,10 @@ void process() {
           // printf("u %f, v %f \n", p_2d_uv.x, p_2d_uv.y);
         }
 
-        auto *keyframe = new KeyFrame(
-            pose_msg->header.stamp.toSec(), frame_index, T, R, image, point_3d,
-            point_2d_uv, point_2d_normal, point_id, sequence, *params);
+        auto *keyframe =
+            new KeyFrame(pose_msg->header.stamp.toSec(), frame_index, T, R,
+                         image, point_3d, point_2d_uv, point_2d_normal,
+                         point_id, sequence, *params, posegraph->matcher);
         m_process.lock();
         start_flag = 1;
         posegraph->addKeyFrame(keyframe, 1);
