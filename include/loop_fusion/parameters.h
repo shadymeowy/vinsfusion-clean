@@ -105,6 +105,7 @@ struct Parameters {
   int matcher_num_features1;
   int matcher_num_features2;
   std::string matcher_model_path;
+  float matcher_threshold;
 
   std::string loop_debug_path;
 

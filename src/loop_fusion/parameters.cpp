@@ -300,6 +300,15 @@ void Parameters::read_from_file(const std::string &config_file) {
     fsSettings["loop_use_matcher"] >> loop_use_matcher;
   }
 
+  if (fsSettings["matcher_threshold"].empty()) {
+    std::cerr << "ERROR: matcher_threshold not set in config file, "
+                 "defaulting to 0.4"
+              << std::endl;
+    matcher_threshold = 0.4;
+  } else {
+    fsSettings["matcher_threshold"] >> matcher_threshold;
+  }
+
   fsSettings.release();
 
   std::cout << "loss type: " << loss_type
