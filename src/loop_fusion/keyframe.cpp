@@ -198,7 +198,8 @@ void KeyFrame::searchByBRIEFDesONNX(
   std::cout << "Matching " << pts1.size() << " to " << pts2.size() << std::endl;
   std::vector<int> id1_to_2;
   // Match two keyframes
-  matcher.match(image, old_kf->image, pts1, pts2, id1_to_2);
+  matcher.match(image, old_kf->image, pts1, pts2, id1_to_2,
+                params.matcher_threshold);
   int counter = 0;
   for (int &i : id1_to_2) {
     if (i >= 0) {
