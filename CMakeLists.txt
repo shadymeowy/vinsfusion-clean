@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0.2)
+cmake_minimum_required(VERSION 3.17)
 project(vins)
 
 ## Set build type
@@ -10,47 +10,7 @@ cmake_policy(SET CMP0069 NEW)
 cmake_policy(SET CMP0074 NEW)
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 
-# check for cuda flag USE_CUDA
-if (NOT DEFINED USE_CUDA)
-  set(USE_CUDA OFF)
-endif()
-
-if (USE_CUDA)
-  if(CMAKE_VERSION VERSION_LESS 3.17)
-    find_package(CUDA REQUIRED)
-
-    add_library(CUDA::cudart   INTERFACE IMPORTED)
-    add_library(CUDA::cublas   INTERFACE IMPORTED)
-    add_library(CUDA::cublasLt INTERFACE IMPORTED)
-    add_library(CUDA::cusolver INTERFACE IMPORTED)
-    add_library(CUDA::cusparse INTERFACE IMPORTED)
-
-    # Use legacy vars; fall back to find_library if any are empty
-    if(NOT CUDA_CUDART_LIBRARY)
-      find_library(CUDA_CUDART_LIBRARY cudart HINTS "${CUDA_TOOLKIT_ROOT_DIR}/lib64" "/usr/local/cuda/lib64")
-    endif()
-    if(NOT CUDA_CUBLAS_LIBRARIES)
-      find_library(CUDA_CUBLAS_LIBRARIES cublas HINTS "${CUDA_TOOLKIT_ROOT_DIR}/lib64" "/usr/local/cuda/lib64")
-    endif()
-    if(NOT CUDA_CUBLASLT_LIBRARY)
-      find_library(CUDA_CUBLASLT_LIBRARY cublasLt HINTS "${CUDA_TOOLKIT_ROOT_DIR}/lib64" "/usr/local/cuda/lib64")
-    endif()
-    if(NOT CUDA_cusolver_LIBRARY)
-      find_library(CUDA_cusolver_LIBRARY cusolver HINTS "${CUDA_TOOLKIT_ROOT_DIR}/lib64" "/usr/local/cuda/lib64")
-    endif()
-    if(NOT CUDA_cusparse_LIBRARY)
-      find_library(CUDA_cusparse_LIBRARY cusparse HINTS "${CUDA_TOOLKIT_ROOT_DIR}/lib64" "/usr/local/cuda/lib64")
-    endif()
-
-    set_target_properties(CUDA::cudart   PROPERTIES INTERFACE_LINK_LIBRARIES "${CUDA_CUDART_LIBRARY}")
-    set_target_properties(CUDA::cublas   PROPERTIES INTERFACE_LINK_LIBRARIES "${CUDA_CUBLAS_LIBRARIES}")
-    set_target_properties(CUDA::cublasLt PROPERTIES INTERFACE_LINK_LIBRARIES "${CUDA_CUBLASLT_LIBRARY}")
-    set_target_properties(CUDA::cusolver PROPERTIES INTERFACE_LINK_LIBRARIES "${CUDA_cusolver_LIBRARY}")
-    set_target_properties(CUDA::cusparse PROPERTIES INTERFACE_LINK_LIBRARIES "${CUDA_cusparse_LIBRARY}")
-  else()
-    find_package(CUDAToolkit REQUIRED COMPONENTS cublas cublasLt cudart cusolver cusparse)
-  endif()
-endif()
+find_package(CUDAToolkit REQUIRED COMPONENTS cublas cublasLt cudart cusolver cusparse)
 
 ## Find required packages
 find_package(catkin REQUIRED COMPONENTS
