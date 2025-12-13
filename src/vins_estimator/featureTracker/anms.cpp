@@ -1,4 +1,4 @@
-#include "anms.h"
+#include <vins_estimator/featureTracker/anms.h>
 
 #include <algorithm>
 #include <cassert>
@@ -15,7 +15,7 @@ void AdaptiveNMS::run(const std::vector<float> &xs,
 
   int low = 1;
   int high = height;
-  int radius = low + ((high - low) / 2);
+  int radius = low + (high - low) / 2;
   int prevradius = -1;
   int result_count = 0;
 
@@ -51,7 +51,7 @@ void AdaptiveNMS::run(const std::vector<float> &xs,
 
   for (int iter = 0; iter < max_iterations; ++iter) {
     // binary search step
-    radius = low + ((high - low) / 2);
+    radius = low + (high - low) / 2;
     // needed to reassure the same radius is not repeated again
     if (radius == prevradius || low > high) {
       // return the keypoints from the previous iteration
@@ -65,7 +65,7 @@ void AdaptiveNMS::run(const std::vector<float> &xs,
 
     // initializing grid
     double c = eps_var * radius / sqrt(2);
-    double thresh = static_cast<double>(radius) / c;
+    double thresh = (static_cast<double>(radius)) / c;
     double thresh2 = thresh * thresh;
     int tmp = static_cast<int>(radius / c);
 
@@ -81,7 +81,7 @@ void AdaptiveNMS::run(const std::vector<float> &xs,
       row = std::clamp(row, 0, num_cell_rows);
       col = std::clamp(col, 0, num_cell_cols);
 
-      if (covered_[(row * (num_cell_cols + 1)) + col]) {
+      if (covered_[row * (num_cell_cols + 1) + col]) {
         continue;
       }
 
@@ -97,12 +97,12 @@ void AdaptiveNMS::run(const std::vector<float> &xs,
 
       for (int row_to_cov = row_min; row_to_cov <= row_max; ++row_to_cov) {
         for (int col_to_cov = col_min; col_to_cov <= col_max; ++col_to_cov) {
-          double dist = (((row_to_cov - row) * (row_to_cov - row)) +
-                         ((col_to_cov - col) * (col_to_cov - col)));
+          double dist = ((row_to_cov - row) * (row_to_cov - row) +
+                         (col_to_cov - col) * (col_to_cov - col));
 
           if (dist <= thresh2) {
             // check the distance to every cell
-            covered_[(row_to_cov * (num_cell_cols + 1)) + col_to_cov] = true;
+            covered_[row_to_cov * (num_cell_cols + 1) + col_to_cov] = true;
           }
         }
       }
