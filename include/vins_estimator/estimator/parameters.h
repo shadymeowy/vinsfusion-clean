@@ -90,6 +90,10 @@ struct Parameters {
   bool stereo_init;
   int stereo_init_lag;
 
+  std::string tapnext_onnx_path;
+  std::string tapnext_engine_path;
+  bool tapnext_enable;
+
   void read_from_file(const std::string &config_file);
 };
 

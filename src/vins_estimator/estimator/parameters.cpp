@@ -258,6 +258,33 @@ void Parameters::read_from_file(const std::string &config_file) {
     fsSettings["stereo_init_lag"] >> stereo_init_lag;
   }
 
+  if (fsSettings["tapnext_onnx_path"].empty()) {
+    std::cerr << "ERROR: tapnext_onnx_path not set in config file, "
+                 "defaulting to empty string"
+              << std::endl;
+    tapnext_onnx_path = "";
+  } else {
+    fsSettings["tapnext_onnx_path"] >> tapnext_onnx_path;
+  }
+
+  if (fsSettings["tapnext_engine_path"].empty()) {
+    std::cerr << "ERROR: tapnext_engine_path not set in config file, "
+                 "defaulting to empty string"
+              << std::endl;
+    tapnext_engine_path = "";
+  } else {
+    fsSettings["tapnext_engine_path"] >> tapnext_engine_path;
+  }
+
+    if (fsSettings["tapnext_enable"].empty()) {
+        std::cerr << "ERROR: tapnext_enable not set in config file, "
+                     "defaulting to false"
+                << std::endl;
+        tapnext_enable = false;
+    } else {
+        fsSettings["tapnext_enable"] >> tapnext_enable;
+    }
+
   fsSettings.release();
 
   std::cout << "loss type: " << loss_type
