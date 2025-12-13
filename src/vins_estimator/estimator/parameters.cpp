@@ -323,9 +323,9 @@ void Parameters::read_from_file(const std::string &config_file) {
 
     if (fsSettings["tapnext_reset_max_frames"].empty()) {
         std::cerr << "ERROR: tapnext_reset_max_frames not set in config file, "
-                     "defaulting to 30"
+                     "defaulting to 100"
                 << std::endl;
-        tapnext_reset_max_frames = 30;
+        tapnext_reset_max_frames = 100;
     } else {
         fsSettings["tapnext_reset_max_frames"] >> tapnext_reset_max_frames;
     }

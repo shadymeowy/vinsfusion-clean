@@ -53,3 +53,12 @@ flow_back: 1            # perform forward and backward optical flow to improve f
 max_solver_time: 0.04  # max solver itration time (ms), to guarantee real time
 max_num_iterations: 8   # max solver itrations, to guarantee real time
 keyframe_parallax: 10.0 # keyframe selection threshold (pixel)
+
+tapnext_enable: 1
+tapnext_onnx_path: "/datasets/tapnext.onnx"
+tapnext_engine_path: "/datasets/tapnext.engine"
+tapnext_max_track: 256
+tapnext_reset_boundary_ratio: 0.1
+tapnext_reset_min_percent: 0.3
+tapnext_reset_min_count: 10
+tapnext_reset_max_frames: 100
