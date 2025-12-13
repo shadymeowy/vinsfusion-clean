@@ -276,13 +276,58 @@ void Parameters::read_from_file(const std::string &config_file) {
     fsSettings["tapnext_engine_path"] >> tapnext_engine_path;
   }
 
-    if (fsSettings["tapnext_enable"].empty()) {
-        std::cerr << "ERROR: tapnext_enable not set in config file, "
-                     "defaulting to false"
+  if (fsSettings["tapnext_enable"].empty()) {
+    std::cerr << "ERROR: tapnext_enable not set in config file, "
+                 "defaulting to false"
+              << std::endl;
+    tapnext_enable = false;
+  } else {
+    fsSettings["tapnext_enable"] >> tapnext_enable;
+  }
+
+  if (fsSettings["tapnext_max_track"].empty()) {
+    std::cerr << "ERROR: tapnext_max_track not set in config file, "
+                 "defaulting to 256"
+              << std::endl;
+    tapnext_max_track = 256;
+  } else {
+    fsSettings["tapnext_max_track"] >> tapnext_max_track;
+  }
+
+  if (fsSettings["tapnext_reset_boundary_ratio"].empty()) {
+    std::cerr << "ERROR: tapnext_reset_boundary_ratio not set in config file, "
+                 "defaulting to 0.1"
+              << std::endl;
+    tapnext_reset_boundary_ratio = 0.1F;
+  } else {
+    fsSettings["tapnext_reset_boundary_ratio"] >> tapnext_reset_boundary_ratio;
+  }
+
+  if (fsSettings["tapnext_reset_min_percent"].empty()) {
+    std::cerr << "ERROR: tapnext_reset_min_percent not set in config file, "
+                 "defaulting to 0.3"
+              << std::endl;
+    tapnext_reset_min_percent = 0.3F;
+  } else {
+    fsSettings["tapnext_reset_min_percent"] >> tapnext_reset_min_percent;
+  }
+
+  if (fsSettings["tapnext_reset_min_count"].empty()) {
+    std::cerr << "ERROR: tapnext_reset_min_count not set in config file, "
+                 "defaulting to 10"
+              << std::endl;
+    tapnext_reset_min_count = 10;
+  } else {
+    fsSettings["tapnext_reset_min_count"] >> tapnext_reset_min_count;
+  }
+
+    if (fsSettings["tapnext_reset_max_frames"].empty()) {
+        std::cerr << "ERROR: tapnext_reset_max_frames not set in config file, "
+                     "defaulting to 30"
                 << std::endl;
-        tapnext_enable = false;
+        tapnext_reset_max_frames = 30;
     } else {
-        fsSettings["tapnext_enable"] >> tapnext_enable;
+        fsSettings["tapnext_reset_max_frames"] >> tapnext_reset_max_frames;
     }
 
   fsSettings.release();

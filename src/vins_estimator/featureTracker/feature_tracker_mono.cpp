@@ -116,12 +116,12 @@ FeatureTrackerMono::trackImage(double cur_time, const cv::Mat &cur_img,
   cv::Mat undist_img;
   cv::remap(cur_img, undist_img, undist_map1_, undist_map2_, cv::INTER_LINEAR);
 
-  // if first frame or need to reset tracker
-  static int frame_counter = 0;
-  if ((frame_counter % 25) == 0) {
+  // check if we need to reset/init tracker
+  if (shouldResetTracker()) {
     resetTracker(undist_img);
   }
-  frame_counter++;
+
+  // run TAPNextTRT to get undistorted tracks
   auto [pts_undist, vis] = tapnext_trt_->run(undist_img);
 
   // distort points back to original image space
@@ -219,7 +219,106 @@ FeatureTrackerMono::trackImage(double cur_time, const cv::Mat &cur_img,
   return featureFrame;
 }
 
+bool FeatureTrackerMono::shouldResetTracker() {
+  // increase frame counter
+  last_reset_counter_++;
+
+  // check max frames without reset
+  if (last_reset_counter_ >= params.tapnext_reset_max_frames) {
+    std::cout << "Resetting tracker due to max frames reached: "
+              << last_reset_counter_ << std::endl;
+    last_reset_counter_ = 0;
+    return true;
+  }
+
+  // check track_cnt_ if too low, reset
+  int tracked_count = 0;
+  for (auto &&s : status_) {
+    if (s) {
+      tracked_count++;
+    }
+  }
+  if (tracked_count < params.tapnext_reset_min_count) {
+    std::cout << "Resetting tracker due to low tracked count: " << tracked_count
+              << std::endl;
+    return true;
+  }
+
+  // check percent of tracks, if too low, reset
+  auto percent_tracked = static_cast<float>(tracked_count) /
+                         static_cast<float>(params.tapnext_max_track);
+  if (percent_tracked < params.tapnext_reset_min_percent) {
+    std::cout << "Resetting tracker due to low percent tracked: "
+              << percent_tracked << std::endl;
+    return true;
+  }
+
+  // reset if no points near left boundary
+  auto &camera = m_camera_[0];
+  int w = camera->imageWidth();
+  int h = camera->imageHeight();
+
+  float min_x = std::numeric_limits<float>::max();
+  for (size_t i = 0; i < cur_model_x_.size(); ++i) {
+    if (status_[i] && cur_model_x_[i] < min_x) {
+      min_x = cur_model_x_[i];
+    }
+  }
+  if (min_x > params.tapnext_reset_boundary_ratio * w) {
+    std::cout
+        << "Resetting tracker due to no points near left boundary. min_x: "
+        << min_x << std::endl;
+    return true;
+  }
+
+  // reset if no points near right boundary
+  float max_x = -std::numeric_limits<float>::max();
+  for (size_t i = 0; i < cur_model_x_.size(); ++i) {
+    if (status_[i] && cur_model_x_[i] > max_x) {
+      max_x = cur_model_x_[i];
+    }
+  }
+  if (max_x < (1.0 - params.tapnext_reset_boundary_ratio) * w) {
+    std::cout
+        << "Resetting tracker due to no points near right boundary. max_x: "
+        << max_x << std::endl;
+    return true;
+  }
+
+  // reset if no points near top boundary
+  float min_y = std::numeric_limits<float>::max();
+  for (size_t i = 0; i < cur_model_y_.size(); ++i) {
+    if (status_[i] && cur_model_y_[i] < min_y) {
+      min_y = cur_model_y_[i];
+    }
+  }
+  if (min_y > params.tapnext_reset_boundary_ratio * h) {
+    std::cout << "Resetting tracker due to no points near top boundary. min_y: "
+              << min_y << std::endl;
+    return true;
+  }
+
+  // reset if no points near bottom boundary
+  float max_y = -std::numeric_limits<float>::max();
+  for (size_t i = 0; i < cur_model_y_.size(); ++i) {
+    if (status_[i] && cur_model_y_[i] > max_y) {
+      max_y = cur_model_y_[i];
+    }
+  }
+  if (max_y < (1.0 - params.tapnext_reset_boundary_ratio) * h) {
+    std::cout
+        << "Resetting tracker due to no points near bottom boundary. max_y: "
+        << max_y << std::endl;
+    return true;
+  }
+
+  return false;
+}
+
 void FeatureTrackerMono::resetTracker(const cv::Mat &cur_img) {
+  // reset internal states
+  last_reset_counter_ = 0;
+
   // Detect keypoints from FAST
   std::vector<cv::KeyPoint> kps;
   fast->detect(cur_img, kps);
@@ -242,7 +341,7 @@ void FeatureTrackerMono::resetTracker(const cv::Mat &cur_img) {
   std::vector<bool> anms_result;
   auto &camera = m_camera_[0];
   anms.run(xs, ys, response, anms_result, camera->imageHeight(),
-           camera->imageWidth(), 256);
+           camera->imageWidth(), params.tapnext_max_track);
 
   // export selected keypoints
   std::vector<float> xs_model;
@@ -296,11 +395,10 @@ void FeatureTrackerMono::readIntrinsicParameter(
 
   // get the first camera's image size
   // TODO(shady): select camera from params
-  // TODO(shady): select track count from params
   auto &camera = m_camera_[0];
   tapnext_trt_ = std::make_unique<TAPNextTRT>(
-      params.tapnext_onnx_path, params.tapnext_engine_path, 256,
-      camera->imageWidth(), camera->imageHeight());
+      params.tapnext_onnx_path, params.tapnext_engine_path,
+      params.tapnext_max_track, camera->imageWidth(), camera->imageHeight());
 
   // precompute undistort maps
   auto imageSize = cv::Size(camera->imageWidth(), camera->imageHeight());

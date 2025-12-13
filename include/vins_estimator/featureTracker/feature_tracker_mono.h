@@ -64,6 +64,7 @@ class FeatureTrackerMono {
                         vector<int> &track_cnt,
                         map<int, cv::Point2f> &prev_pts_map);
   void resetTracker(const cv::Mat &cur_img);
+  bool shouldResetTracker();
 
   Parameters &params;
 
@@ -83,6 +84,7 @@ class FeatureTrackerMono {
   vector<int> ids_;
   vector<int> track_cnt_;
   vector<bool> status_;
+  int last_reset_counter_ = 0;
 
   cv::Mat im_track_;
 

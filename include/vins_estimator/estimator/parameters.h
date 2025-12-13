@@ -93,6 +93,11 @@ struct Parameters {
   std::string tapnext_onnx_path;
   std::string tapnext_engine_path;
   bool tapnext_enable;
+  int tapnext_max_track;
+  float tapnext_reset_boundary_ratio;
+  float tapnext_reset_min_percent;
+  int tapnext_reset_min_count;
+  int tapnext_reset_max_frames;
 
   void read_from_file(const std::string &config_file);
 };
