@@ -18,6 +18,7 @@
 #include <execinfo.h>
 #include <vins_estimator/estimator/parameters.h>
 #include <vins_estimator/utility/tic_toc.h>
+#include <vins_estimator/featureTracker/id_counter.h>
 
 #include <csignal>
 #include <cstdio>
@@ -82,7 +83,6 @@ class FeatureTracker {
   double cur_time_;
   double prev_time_;
   bool stereo_cam_;
-  int n_id_;
   bool has_prediction_;
 };
 

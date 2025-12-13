@@ -10,7 +10,11 @@
  * Author: Qin Tong (qintonguav@gmail.com)
  *******************************************************/
 
+#include <camodocal/camera_models/Camera.h>
+#include <camodocal/camera_models/CameraFactory.h>
 #include <vins_estimator/featureTracker/feature_tracker_mono.h>
+
+#include <algorithm>
 
 #include "vins_estimator/featureTracker/tapnext_trt.h"
 
@@ -21,11 +25,6 @@ FeatureTrackerMono::FeatureTrackerMono(Parameters &params) : params(params) {
   fast->setThreshold(0);
   fast->setNonmaxSuppression(true);
 }
-
-#include <camodocal/camera_models/Camera.h>
-#include <camodocal/camera_models/CameraFactory.h>
-
-#include <algorithm>
 
 cv::Mat getOptimalRectifyMatrix(const camodocal::CameraPtr &cam,
                                 const cv::Size &imgSize) {
@@ -118,71 +117,66 @@ FeatureTrackerMono::trackImage(double cur_time, const cv::Mat &cur_img,
   cv::remap(cur_img, undist_img, undist_map1_, undist_map2_, cv::INTER_LINEAR);
 
   // if first frame or need to reset tracker
-  static bool first_frame = true;
-  if (first_frame) {
+  static int frame_counter = 0;
+  if ((frame_counter % 25) == 0) {
     resetTracker(undist_img);
-    first_frame = false;
   }
-  auto [pts, vis] = tapnext_trt_->run(undist_img);
+  frame_counter++;
+  auto [pts_undist, vis] = tapnext_trt_->run(undist_img);
 
-  // draw track image
-  if (params.show_track) {
-    cv::Mat im_track_undist, im_track_dist;
-    cvtColor(undist_img, im_track_undist, cv::COLOR_GRAY2BGR);
-    cvtColor(cur_img, im_track_dist, cv::COLOR_GRAY2BGR);
-    for (size_t k = 0; k < pts.size(); ++k) {
-      if (vis[k]) {
-        const auto &p = pts[k];
-        if (p.x >= 0 && p.x < cur_img.cols && p.y >= 0 && p.y < cur_img.rows) {
-          cv::circle(im_track_undist,
-                     cv::Point(static_cast<int>(p.x), static_cast<int>(p.y)), 3,
-                     cv::Scalar(0, 255, 0), -1);
-        }
-        auto &camera = m_camera_[0];
-        cv::Mat R = cv::Mat::eye(3, 3, CV_32F);
-        cv::Point2f p_dist = rectifiedToDistorted(p, camera, K_new_, R);
-        if (p_dist.x >= 0 && p_dist.x < cur_img.cols && p_dist.y >= 0 &&
-            p_dist.y < cur_img.rows) {
-          cv::circle(
-              im_track_dist,
-              cv::Point(static_cast<int>(p_dist.x), static_cast<int>(p_dist.y)),
-              3, cv::Scalar(0, 255, 0), -1);
-        }
-      }
+  // distort points back to original image space
+  // everything expects distorted points from here on...
+  auto &camera = m_camera_[0];
+  cur_model_x_.clear();
+  cur_model_y_.clear();
+  for (auto &p : pts_undist) {
+    cv::Mat R = cv::Mat::eye(3, 3, CV_32F);
+    cv::Point2f p_dist = rectifiedToDistorted(p, camera, K_new_, R);
+    cur_model_x_.push_back(p_dist.x);
+    cur_model_y_.push_back(p_dist.y);
+  }
+
+  // update status based on visibility
+  // once invisible, always invisible
+  for (size_t i = 0; i < vis.size(); ++i) {
+    if (!vis[i]) {
+      status_[i] = false;
     }
-    cv::imshow("track image", im_track_undist);
-    cv::imshow("track image distorted", im_track_dist);
   }
 
-  // show undistorted image
-  cv::imshow("undistorted image", undist_img);
-  // show distorted image
-  cv::imshow("distorted image", cur_img);
-  cv::waitKey(1);
+  // update status based on image bounds
+  for (size_t i = 0; i < cur_model_x_.size(); ++i) {
+    if (cur_model_x_[i] < 0 || cur_model_x_[i] >= cur_img.cols ||
+        cur_model_y_[i] < 0 || cur_model_y_[i] >= cur_img.rows) {
+      status_[i] = false;
+    }
+  }
 
-  vector<float> cur_x(params.max_cnt, 0);
-  vector<float> cur_y(params.max_cnt, 0);
-  vector<int> ids(params.max_cnt, 0);
-  vector<int> track_cnt(params.max_cnt, 0);
+  // count tracked points and update track counts
+  int count_tracks = 0;
+  for (size_t i = 0; i < status_.size(); ++i) {
+    if (status_[i]) {
+      count_tracks++;
+      track_cnt_[i]++;
+    }
+  }
 
+  // now is the juicy part
+  // cur_pts, ids, and track_cnt of actual tracked points
+  // is needed for output
   vector<cv::Point2f> cur_pts;
-
-  //   int len = track_klt_cy(cur_img.data, width, height, cur_x.data(),
-  //                          cur_y.data(), ids.data(), track_cnt.data(),
-  //                          params.min_dist, params.max_cnt,
-  //                          params.flow_back);
-  int len = 0;
-
-  printf("track_klt_cy len: %d, cur_time: %f\n", len, cur_time);
-  // resize vectors cur_x, cur_y, ids, track_cnt
-  cur_x.resize(len);
-  cur_y.resize(len);
-  ids.resize(len);
-  track_cnt.resize(len);
-
-  cur_pts.reserve(len);
-  for (int i = 0; i < len; i++) {
-    cur_pts.emplace_back(cur_x[i], cur_y[i]);
+  vector<int> ids;
+  vector<int> track_cnt;
+  cur_pts.reserve(count_tracks);
+  ids.reserve(count_tracks);
+  track_cnt.reserve(count_tracks);
+  for (size_t i = 0; i < status_.size(); ++i) {
+    if (!status_[i]) {
+      continue;
+    }
+    cur_pts.emplace_back(cur_model_x_[i], cur_model_y_[i]);
+    ids.push_back(ids_[i]);
+    track_cnt.push_back(track_cnt_[i]);
   }
 
   vector<cv::Point2f> cur_un_pts;
@@ -244,11 +238,13 @@ void FeatureTrackerMono::resetTracker(const cv::Mat &cur_img) {
     response.push_back(kp.response);
   }
 
+  // run adaptive nms
   std::vector<bool> anms_result;
   auto &camera = m_camera_[0];
   anms.run(xs, ys, response, anms_result, camera->imageHeight(),
            camera->imageWidth(), 256);
 
+  // export selected keypoints
   std::vector<float> xs_model;
   std::vector<float> ys_model;
   for (size_t i = 0; i < anms_result.size(); ++i) {
@@ -259,6 +255,26 @@ void FeatureTrackerMono::resetTracker(const cv::Mat &cur_img) {
   }
   std::cout << "ANMS keypoints selected: " << xs_model.size() << std::endl;
 
+  // if somehow less than max_cnt keypoints
+  // add some random keypoints
+  while (xs_model.size() < static_cast<size_t>(params.max_cnt)) {
+    auto x = static_cast<float>(rand() % (cur_img.cols - 1));
+    auto y = static_cast<float>(rand() % (cur_img.rows - 1));
+    xs_model.push_back(x);
+    ys_model.push_back(y);
+  }
+
+  // populate ids, track_cnt, and status
+  ids_.clear();
+  track_cnt_.clear();
+  status_.clear();
+  for (size_t i = 0; i < xs_model.size(); ++i) {
+    ids_.push_back(IdCounter::get());
+    track_cnt_.push_back(1);
+    status_.push_back(true);
+  }
+
+  // reset TAPNextTRT
   tapnext_trt_->reset(xs_model, ys_model);
 }
 

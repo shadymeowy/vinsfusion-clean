@@ -18,6 +18,7 @@
 #include <execinfo.h>
 #include <vins_estimator/estimator/parameters.h>
 #include <vins_estimator/featureTracker/anms.h>
+#include <vins_estimator/featureTracker/id_counter.h>
 #include <vins_estimator/featureTracker/tapnext_trt.h>
 #include <vins_estimator/utility/tic_toc.h>
 
@@ -77,11 +78,11 @@ class FeatureTrackerMono {
   cv::Mat undist_map1_;
   cv::Mat undist_map2_;
   // current state
-  vector<float> cur_x;
-  vector<float> cur_y;
-  vector<int> ids;
-  vector<int> track_cnt;
-  vector<bool> status;
+  vector<float> cur_model_x_;
+  vector<float> cur_model_y_;
+  vector<int> ids_;
+  vector<int> track_cnt_;
+  vector<bool> status_;
 
   cv::Mat im_track_;
 

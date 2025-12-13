@@ -44,7 +44,7 @@ void reduceVector(vector<int> &v, vector<uchar> status) {
 }
 
 FeatureTracker::FeatureTracker(Parameters &params)
-    : params(params), stereo_cam_(false), n_id_(0), has_prediction_(false) {}
+    : params(params), stereo_cam_(false), has_prediction_(false) {}
 
 void FeatureTracker::setMask() {
   mask_ = cv::Mat(row, col, CV_8UC1, cv::Scalar(255));
@@ -175,11 +175,11 @@ FeatureTracker::trackImage(double _cur_time, const cv::Mat &_img,
 
       vector<cv::Point2f> n_pts;
       n_pts.reserve(n_max_cnt);
-      cv::goodFeaturesToTrack(cur_img_, n_pts, n_max_cnt, 0.01,
-                              params.min_dist, mask_);
+      cv::goodFeaturesToTrack(cur_img_, n_pts, n_max_cnt, 0.01, params.min_dist,
+                              mask_);
       for (auto &p : n_pts) {
         cur_pts_.push_back(p);
-        ids_.push_back(n_id_++);
+        ids_.push_back(IdCounter::get());
         track_cnt_.push_back(1);
       }
     }
