@@ -101,8 +101,8 @@ add_executable(
   src/vins_estimator/initial/initial_aligment.cpp
   src/vins_estimator/initial/initial_sfm.cpp
   src/vins_estimator/initial/initial_ex_rotation.cpp
-  src/vins_estimator/featureTracker/feature_tracker.cpp
-  src/vins_estimator/featureTracker/feature_tracker_mono.cpp
+  src/vins_estimator/featureTracker/feature_tracker_klt.cpp
+  src/vins_estimator/featureTracker/feature_tracker_tapnext.cpp
   src/vins_estimator/featureTracker/tapnext_trt.cpp
   src/vins_estimator/featureTracker/anms.cpp
   src/camodocal/camera_models/Camera.cc

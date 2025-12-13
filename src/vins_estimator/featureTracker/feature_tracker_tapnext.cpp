@@ -12,7 +12,7 @@
 
 #include <camodocal/camera_models/Camera.h>
 #include <camodocal/camera_models/CameraFactory.h>
-#include <vins_estimator/featureTracker/feature_tracker_mono.h>
+#include <vins_estimator/featureTracker/feature_tracker_tapnext.h>
 
 #include <algorithm>
 
@@ -20,7 +20,7 @@
 
 namespace vins::estimator {
 
-FeatureTrackerMono::FeatureTrackerMono(Parameters &params) : params(params) {
+FeatureTrackerTAPNext::FeatureTrackerTAPNext(Parameters &params) : params(params) {
   fast = cv::FastFeatureDetector::create();
   fast->setThreshold(0);
   fast->setNonmaxSuppression(true);
@@ -108,7 +108,7 @@ cv::Point2f rectifiedToDistorted(const cv::Point2f &pt_rect,
 }
 
 map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>>
-FeatureTrackerMono::trackImage(double cur_time, const cv::Mat &cur_img,
+FeatureTrackerTAPNext::trackImage(double cur_time, const cv::Mat &cur_img,
                                const cv::Mat &) {
   TicToc t_r;
 
@@ -219,7 +219,7 @@ FeatureTrackerMono::trackImage(double cur_time, const cv::Mat &cur_img,
   return featureFrame;
 }
 
-bool FeatureTrackerMono::shouldResetTracker() {
+bool FeatureTrackerTAPNext::shouldResetTracker() {
   // increase frame counter
   last_reset_counter_++;
 
@@ -315,7 +315,7 @@ bool FeatureTrackerMono::shouldResetTracker() {
   return false;
 }
 
-void FeatureTrackerMono::resetTracker(const cv::Mat &cur_img) {
+void FeatureTrackerTAPNext::resetTracker(const cv::Mat &cur_img) {
   // reset internal states
   last_reset_counter_ = 0;
 
@@ -377,7 +377,7 @@ void FeatureTrackerMono::resetTracker(const cv::Mat &cur_img) {
   tapnext_trt_->reset(xs_model, ys_model);
 }
 
-void FeatureTrackerMono::readIntrinsicParameter(
+void FeatureTrackerTAPNext::readIntrinsicParameter(
     const vector<string> &calib_file) {
   for (const auto &i : calib_file) {
     ROS_INFO("reading paramerter of camera %s", i.c_str());
@@ -415,7 +415,7 @@ void FeatureTrackerMono::readIntrinsicParameter(
                                   cv::Mat::eye(3, 3, CV_32F));
 }
 
-void FeatureTrackerMono::undistortedPts(vector<cv::Point2f> &un_pts,
+void FeatureTrackerTAPNext::undistortedPts(vector<cv::Point2f> &un_pts,
                                         vector<cv::Point2f> &pts,
                                         const camodocal::CameraPtr &cam) {
   for (auto &pt : pts) {
@@ -426,7 +426,7 @@ void FeatureTrackerMono::undistortedPts(vector<cv::Point2f> &un_pts,
   }
 }
 
-void FeatureTrackerMono::ptsVelocity(vector<cv::Point2f> &pts_velocity,
+void FeatureTrackerTAPNext::ptsVelocity(vector<cv::Point2f> &pts_velocity,
                                      double dt, vector<int> &ids,
                                      vector<cv::Point2f> &pts,
                                      map<int, cv::Point2f> &cur_id_pts,
@@ -456,7 +456,7 @@ void FeatureTrackerMono::ptsVelocity(vector<cv::Point2f> &pts_velocity,
   }
 }
 
-void FeatureTrackerMono::drawTrack(cv::Mat &im_track, const cv::Mat &im,
+void FeatureTrackerTAPNext::drawTrack(cv::Mat &im_track, const cv::Mat &im,
                                    vector<int> &cur_ids,
                                    vector<cv::Point2f> &cur_pts,
                                    vector<int> &track_cnt,
@@ -481,9 +481,9 @@ void FeatureTrackerMono::drawTrack(cv::Mat &im_track, const cv::Mat &im,
   }
 }
 
-cv::Mat FeatureTrackerMono::getTrackImage() { return im_track_; }
+cv::Mat FeatureTrackerTAPNext::getTrackImage() { return im_track_; }
 
-void FeatureTrackerMono::removeOutliers(set<int> & /*removePtsIds*/) {
+void FeatureTrackerTAPNext::removeOutliers(set<int> & /*removePtsIds*/) {
   throw std::runtime_error(
       "FeatureTrackerMono::removeOutliers not implemented yet.");
 }

@@ -35,9 +35,9 @@ bool inBorder(const cv::Point2f &pt);
 void reduceVector(vector<cv::Point2f> &v, vector<uchar> status);
 void reduceVector(vector<int> &v, vector<uchar> status);
 
-class FeatureTracker {
+class FeatureTrackerKLT {
  public:
-  explicit FeatureTracker(Parameters &params);
+  explicit FeatureTrackerKLT(Parameters &params);
   map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> trackImage(
       double _cur_time, const cv::Mat &_img, const cv::Mat &_img1 = cv::Mat());
   void readIntrinsicParameter(const vector<string> &calib_file);

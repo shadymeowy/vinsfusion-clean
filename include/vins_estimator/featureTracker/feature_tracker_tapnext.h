@@ -35,9 +35,9 @@ using namespace Eigen;
 
 namespace vins::estimator {
 
-class FeatureTrackerMono {
+class FeatureTrackerTAPNext {
  public:
-  explicit FeatureTrackerMono(Parameters &params);
+  explicit FeatureTrackerTAPNext(Parameters &params);
   map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> trackImage(
       double _cur_time, const cv::Mat &_img, const cv::Mat &_img1 = cv::Mat());
   void readIntrinsicParameter(const vector<string> &calib_file);
