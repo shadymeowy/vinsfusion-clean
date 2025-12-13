@@ -10,7 +10,26 @@ cmake_policy(SET CMP0069 NEW)
 cmake_policy(SET CMP0074 NEW)
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 
+# Enable CUDA
 find_package(CUDAToolkit REQUIRED COMPONENTS cublas cublasLt cudart cusolver cusparse)
+
+# Find TensorRT
+if (NOT DEFINED TENSORRT_ROOT)
+    set(TENSORRT_ROOT "/usr")
+endif()
+
+# Locate TensorRT include files and libraries
+find_path(TENSORRT_INCLUDE_DIR NvInfer.h
+    HINTS ${TENSORRT_ROOT}/include /usr/include/x86_64-linux-gnu)
+find_library(TENSORRT_LIB nvinfer
+    HINTS ${TENSORRT_ROOT}/lib ${TENSORRT_ROOT}/lib64 /usr/lib/x86_64-linux-gnu)
+find_library(TENSORRT_PARSER_LIB nvonnxparser
+    HINTS ${TENSORRT_ROOT}/lib ${TENSORRT_ROOT}/lib64 /usr/lib/x86_64-linux-gnu)
+
+# Check if TensorRT was found
+if (NOT TENSORRT_INCLUDE_DIR OR NOT TENSORRT_LIB OR NOT TENSORRT_PARSER_LIB)
+    message(FATAL_ERROR "Could not find TensorRT (headers/libs). Set TENSORRT_ROOT.")
+endif()
 
 ## Find required packages
 find_package(catkin REQUIRED COMPONENTS
@@ -34,6 +53,8 @@ include_directories(
   ${OpenCV_INCLUDE_DIRS}
   ${CERES_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIR}
+  ${TENSORRT_INCLUDE_DIR}
+  ${CUDAToolkit_INCLUDE_DIRS}
 )
 
 ## Map Ceres and Eigen3 variables for catkin_package
@@ -81,6 +102,9 @@ add_executable(
   src/vins_estimator/initial/initial_sfm.cpp
   src/vins_estimator/initial/initial_ex_rotation.cpp
   src/vins_estimator/featureTracker/feature_tracker.cpp
+  src/vins_estimator/featureTracker/feature_tracker_mono.cpp
+  src/vins_estimator/featureTracker/tapnext_trt.cpp
+  src/vins_estimator/featureTracker/anms.cpp
   src/camodocal/camera_models/Camera.cc
   src/camodocal/camera_models/CameraFactory.cc
   src/camodocal/camera_models/PinholeCamera.cc
@@ -94,6 +118,8 @@ target_link_libraries(vins_node
   ${catkin_LIBRARIES}
   ${OpenCV_LIBS}
   ${CERES_LIBRARIES}
+  ${TENSORRT_LIB}
+  ${TENSORRT_PARSER_LIB}
 )
 
 add_executable(

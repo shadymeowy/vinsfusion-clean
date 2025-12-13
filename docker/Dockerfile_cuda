@@ -134,3 +134,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get update \
     && apt-get install -y cmake \
     && rm -rf /var/lib/apt/lists/*
+
+# Install tensorrt-dev and tensorrt package
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    tensorrt tensorrt-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+ENV ROS_HOSTNAME=localhost
+ENV ROS_MASTER_URI=http://localhost:11311
