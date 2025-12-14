@@ -264,7 +264,7 @@ bool FeatureTrackerTAPNext::shouldResetTracker() {
       min_x = cur_model_x_[i];
     }
   }
-  if (min_x > params.tapnext_reset_boundary_ratio * w) {
+  if (min_x > params.tapnext_reset_boundary_ratio_x * w) {
     std::cout
         << "Resetting tracker due to no points near left boundary. min_x: "
         << min_x << std::endl;
@@ -278,7 +278,7 @@ bool FeatureTrackerTAPNext::shouldResetTracker() {
       max_x = cur_model_x_[i];
     }
   }
-  if (max_x < (1.0 - params.tapnext_reset_boundary_ratio) * w) {
+  if (max_x < (1.0 - params.tapnext_reset_boundary_ratio_x) * w) {
     std::cout
         << "Resetting tracker due to no points near right boundary. max_x: "
         << max_x << std::endl;
@@ -292,7 +292,7 @@ bool FeatureTrackerTAPNext::shouldResetTracker() {
       min_y = cur_model_y_[i];
     }
   }
-  if (min_y > params.tapnext_reset_boundary_ratio * h) {
+  if (min_y > params.tapnext_reset_boundary_ratio_y * h) {
     std::cout << "Resetting tracker due to no points near top boundary. min_y: "
               << min_y << std::endl;
     return true;
@@ -305,7 +305,7 @@ bool FeatureTrackerTAPNext::shouldResetTracker() {
       max_y = cur_model_y_[i];
     }
   }
-  if (max_y < (1.0 - params.tapnext_reset_boundary_ratio) * h) {
+  if (max_y < (1.0 - params.tapnext_reset_boundary_ratio_y) * h) {
     std::cout
         << "Resetting tracker due to no points near bottom boundary. max_y: "
         << max_y << std::endl;

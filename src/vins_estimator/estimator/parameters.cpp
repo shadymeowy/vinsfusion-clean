@@ -294,20 +294,29 @@ void Parameters::read_from_file(const std::string &config_file) {
     fsSettings["tapnext_max_track"] >> tapnext_max_track;
   }
 
-  if (fsSettings["tapnext_reset_boundary_ratio"].empty()) {
-    std::cerr << "ERROR: tapnext_reset_boundary_ratio not set in config file, "
-                 "defaulting to 0.1"
+  if (fsSettings["tapnext_reset_boundary_ratio_x"].empty()) {
+    std::cerr << "ERROR: tapnext_reset_boundary_ratio_x not set in config file, "
+                 "defaulting to 0.3"
               << std::endl;
-    tapnext_reset_boundary_ratio = 0.1F;
+    tapnext_reset_boundary_ratio_x = 0.3F;
   } else {
-    fsSettings["tapnext_reset_boundary_ratio"] >> tapnext_reset_boundary_ratio;
+    fsSettings["tapnext_reset_boundary_ratio_x"] >> tapnext_reset_boundary_ratio_x;
+  }
+  
+  if (fsSettings["tapnext_reset_boundary_ratio_y"].empty()) {
+    std::cerr << "ERROR: tapnext_reset_boundary_ratio_y not set in config file, "
+                 "defaulting to 1.0"
+              << std::endl;
+    tapnext_reset_boundary_ratio_y = 1.0F;
+  } else {
+    fsSettings["tapnext_reset_boundary_ratio_y"] >> tapnext_reset_boundary_ratio_y;
   }
 
   if (fsSettings["tapnext_reset_min_percent"].empty()) {
     std::cerr << "ERROR: tapnext_reset_min_percent not set in config file, "
-                 "defaulting to 0.3"
+                 "defaulting to 0.1"
               << std::endl;
-    tapnext_reset_min_percent = 0.3F;
+    tapnext_reset_min_percent = 0.1F;
   } else {
     fsSettings["tapnext_reset_min_percent"] >> tapnext_reset_min_percent;
   }
