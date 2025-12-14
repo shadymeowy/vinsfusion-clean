@@ -77,4 +77,4 @@ tapnext_max_track: 256
 tapnext_reset_boundary_ratio_x: 0.3
 tapnext_reset_boundary_ratio_y: 1.0
 tapnext_reset_min_count: 10
-tapnext_reset_max_frames: 100
+tapnext_reset_max_frames: 25
