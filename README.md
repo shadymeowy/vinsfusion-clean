@@ -1,84 +1,178 @@
 # vinsfusion-clean
 
-This repository contains a cleaned up and properly containerized version of the VINS-Fusion project.
-It is designed to be developed, built, and run within a Docker container. Unless otherwise specified, all commands may be run from within the Docker container.
+This repository is a cleaned and containerized variant of VINS-Fusion built around ROS Noetic.
+The intended workflow is:
 
-## Building
+1. Build the Docker image from [`docker/Dockerfile`](docker/Dockerfile).
+2. Enter the container with [`docker/run.sh`](docker/run.sh).
+3. Build and run the catkin workspace inside that container.
 
-To get started, first build the Docker image using the provided `Dockerfile`. Navigate to the directory containing the `Dockerfile` and run the following command:
+The `run.sh` script is the supported development/runtime entrypoint. It mounts:
+
+- the persistent catkin workspace at `$HOME/.ws/vinsfusion` into `/root/catkin_ws`
+- this repository into `/root/catkin_ws/src/VINS-Fusion`
+- the dataset directory you pass as `$1` into `/datasets`
+
+That means your build artifacts persist across container runs, while the source tree stays live-mounted from this checkout.
+
+## Container Setup
+
+Build the image from the repository root:
 
 ```bash
-docker build -t ros:vins-fusion -f ./Dockerfile ..
+docker build -t ros:vins-fusion -f docker/Dockerfile .
 ```
 
-This command builds a Docker image named `ros:vins-fusion` that includes all necessary dependencies for VINS-Fusion.
-
-Once the Docker image is built, you'll need to build the Catkin workspace. Execute the following commands in your terminal:
+Then start the container and mount your dataset directory:
 
 ```bash
+./run.sh /absolute/path/to/datasets
+```
+
+Notes:
+
+- Run `./run.sh` from the repository root. The script mounts `$(pwd)` into `/root/catkin_ws/src/VINS-Fusion`, so launching it from `docker/` or any other directory mounts the wrong path.
+- `run.sh` expects the dataset directory as its first argument and mounts it at `/datasets`.
+- The script enables X11 forwarding and GPU access, and assumes Docker can use `--runtime nvidia --gpus all`.
+- `/dev/video0` and `/dev/dri` are passed through as well.
+
+## Build Inside The Container
+
+After `./run.sh` drops you into a shell inside the container:
+
+```bash
+cd /root/catkin_ws
+
 catkin config \
     --env-cache \
     --extend /opt/ros/noetic \
     --cmake-args \
     -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
     -DCMAKE_BUILD_TYPE=Release
-```
 
-Then you can build the Catkin workspace with:
-
-```bash
 catkin build
-```
-
-These commands configure your Catkin workspace and then compile the project in `Release` mode for optimized performance.
-After a successful build, you must source the setup file to correctly configure your environment. This allows you to use the VINS-Fusion executables and libraries.
-
-```bash
 source devel/setup.bash
 ```
 
-## Running
-To run the VINS-Fusion node, you can use the following command:
+This repo builds the following ROS executables:
+
+- `vins_node`
+- `loop_fusion_node`
+- `global_fusion_node`
+
+## Running MH_01 With `vins.launch`
+
+The main launch file is `launch/vins.launch`. It starts:
+
+- `vins_node`
+- `loop_fusion_node`
+- `rviz` by default
+- `rosbag play` for the bag passed via `bag_path`
+
+Use this workflow for the EuRoC `MH_01_easy.bag` example.
+
+1. Download the dataset from [EuRoC MAV Dataset](https://projects.asl.ethz.ch/datasets/).
+   Pick `MH_01` from the dataset list and make sure you have `MH_01_easy.bag` on the host.
+
+2. Put the bag in a host directory, for example:
 
 ```bash
-roslaunch vins vins.launch bag_path:=/your/path/to/bagfile.bag config_path:=/your/path/to/config.yaml
+/home/your-user/euroc/MH_01_easy.bag
 ```
 
-For example,
-```bash
-roslaunch vins vins.launch bag_path:=/bagfiles/MH_01_easy.bag config_path:=/root/catkin_ws/src/VINS-Fusion/config/euroc/euroc_mono_imu_config.yaml
-```
-
-## Formatting and Linting
-To ensure code quality and consistency, this project uses `clang-format` for formatting and `clang-tidy` for linting.
-
-Before running these tools, make sure you have in the correct directory where the config files are located:
+3. From the repository root, start the container and mount that directory as `/datasets`:
 
 ```bash
-cd /root/catkin_ws/src/VINS-Fusion/
+./run.sh /home/your-user/euroc
 ```
 
-To format all the files in project, use the following command:
+4. Inside the container, build once if needed:
 
 ```bash
-find . -type f \( -name "*.c" -o -name "*.cpp" -o -name "*.h" -o -name "*.cc" \) -exec clang-format -i {} +
+cd /root/catkin_ws
+
+catkin config \
+    --env-cache \
+    --extend /opt/ros/noetic \
+    --cmake-args \
+    -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+    -DCMAKE_BUILD_TYPE=Release
+
+catkin build
+source devel/setup.bash
 ```
 
-While formatting is quite fast, linting can take a bit longer.
-You can run `clang-tidy` on a specific file by providing the file path as an argument:
+5. Create the output directories inside the container.
+
+The EuRoC configs in this repository write trajectories into the mounted repository at `/root/catkin_ws/src/VINS-Fusion/output` and use `/root/catkin_ws/src/VINS-Fusion/output/pose_graph/` for loop-fusion pose-graph data.
+
+Create the directories once:
 
 ```bash
-clang-tidy -p /root/catkin_ws/build/vins/ --header-filter /root/catkin_ws/src/VINS-Fusion/src/feature_tracker.h /catkin_ws/src/VINS-Fusion/src/feature_tracker.cpp
+cd /root/catkin_ws/src/VINS-Fusion
+mkdir -p output/pose_graph
 ```
 
-It is also possible to run `clang-tidy` on all files in the project using the following commands:
+6. Run `MH_01_easy.bag` with the mono+IMU EuRoC config:
 
 ```bash
-run-clang-tidy -config-file /root/catkin_ws/src/VINS-Fusion/.clang-tidy -p /root/catkin_ws/build/vins/ -header-filter='.*' -fix
-run-clang-tidy -config-file /root/catkin_ws/src/VINS-Fusion/.clang-tidy -p /root/catkin_ws/build/global_fusion/ -header-filter='.*' -fix
-run-clang-tidy -config-file /root/catkin_ws/src/VINS-Fusion/.clang-tidy -p /root/catkin_ws/build/loop_fusion/ -header-filter='.*' -fix
-run-clang-tidy -config-file /root/catkin_ws/src/VINS-Fusion/.clang-tidy -p /root/catkin_ws/build/camera_models/ -header-filter='.*' -fix
+cd /root/catkin_ws
+source devel/setup.bash
+
+roslaunch vins vins.launch \
+    bag_path:=/datasets/MH_01_easy.bag \
+    config_path:=/root/catkin_ws/src/VINS-Fusion/config/euroc/euroc_mono_imu_config.yaml
 ```
+
+7. After the run, trajectory files are written into the repository:
+
+- `/root/catkin_ws/src/VINS-Fusion/output/vio.csv`
+- `/root/catkin_ws/src/VINS-Fusion/output/vio_loop.csv`
+
+`vio.csv` is written by `vins_node`. `vio_loop.csv` is written by `loop_fusion_node`.
+
+These files are plain text trajectories with one pose per line:
+
+```text
+timestamp tx ty tz qx qy qz qw
+```
+
+That is TUM quaternion order.
+
+You can evaluate them with [evo](https://github.com/MichaelGrupp/evo), for example:
+
+```bash
+evo_ape tum \
+    /root/catkin_ws/src/VINS-Fusion/output/vio.csv \
+    /root/catkin_ws/src/VINS-Fusion/output/vio_loop.csv -p
+```
+
+`evo` is not included in this Docker image, so install it separately on the host or in another environment if you want to analyze trajectories with it.
+
+8. Optional launch arguments:
+
+- `rviz:=false` to skip RViz
+- `nowait:=true` to make the `rosbag play` node required
+
+Example:
+
+```bash
+roslaunch vins vins.launch \
+    bag_path:=/datasets/MH_01_easy.bag \
+    config_path:=/root/catkin_ws/src/VINS-Fusion/config/euroc/euroc_mono_imu_config.yaml \
+    rviz:=false
+```
+
+To test other EuRoC modes, keep `bag_path` the same and change only `config_path`, for example:
+
+```bash
+/root/catkin_ws/src/VINS-Fusion/config/euroc/euroc_stereo_imu_config.yaml
+/root/catkin_ws/src/VINS-Fusion/config/euroc/euroc_stereo_config.yaml
+```
+
+## Legacy Upstream README Starts Here
+
+The remainder of this file is preserved from the original upstream-style README for reference. It contains older build/runtime guidance and does not reflect the container-first workflow above.
 
 # VINS-Fusion
 ## An optimization-based multi-sensor state estimator

@@ -158,8 +158,8 @@ void pubOdometry(const Estimator &estimator, const std_msgs::Header &header) {
     foutC << header.stamp.toSec() << " ";
     foutC << estimator.Ps[WINDOW_SIZE].x() << " "
           << estimator.Ps[WINDOW_SIZE].y() << " "
-          << estimator.Ps[WINDOW_SIZE].z() << " " << tmp_Q.w() << " "
-          << tmp_Q.x() << " " << tmp_Q.y() << " " << tmp_Q.z() << endl;
+          << estimator.Ps[WINDOW_SIZE].z() << " " << tmp_Q.x() << " "
+          << tmp_Q.y() << " " << tmp_Q.z() << " " << tmp_Q.w() << endl;
     foutC.close();
     Eigen::Vector3d tmp_T = estimator.Ps[WINDOW_SIZE];
     printf("time: %f, t: %f %f %f q: %f %f %f %f \n", header.stamp.toSec(),

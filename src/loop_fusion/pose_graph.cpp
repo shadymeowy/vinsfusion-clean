@@ -170,8 +170,8 @@ void PoseGraph::addKeyFrame(KeyFrame *cur_kf, bool flag_detect_loop) {
     loop_path_file.setf(ios::fixed, ios::floatfield);
     loop_path_file.precision(5);
     loop_path_file << cur_kf->time_stamp << " ";
-    loop_path_file << P.x() << " " << P.y() << " " << P.z() << " " << Q.w()
-                   << " " << Q.x() << " " << Q.y() << " " << Q.z() << endl;
+    loop_path_file << P.x() << " " << P.y() << " " << P.z() << " " << Q.x()
+                   << " " << Q.y() << " " << Q.z() << " " << Q.w() << endl;
     loop_path_file.close();
   }
   // draw local connection
@@ -768,8 +768,8 @@ void PoseGraph::updatePath() {
       loop_path_file.setf(ios::fixed, ios::floatfield);
       loop_path_file.precision(5);
       loop_path_file << (*it)->time_stamp << " ";
-      loop_path_file << P.x() << " " << P.y() << " " << P.z() << " " << Q.w()
-                     << " " << Q.x() << " " << Q.y() << " " << Q.z() << endl;
+      loop_path_file << P.x() << " " << P.y() << " " << P.z() << " " << Q.x()
+                     << " " << Q.y() << " " << Q.z() << " " << Q.w() << endl;
       loop_path_file.close();
     }
     // draw local connection
