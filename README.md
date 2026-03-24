@@ -24,6 +24,30 @@ docker build -t ros:vins-fusion -f docker/Dockerfile .
 ```
 
 Then start the container and mount your dataset directory:
+This repository is a cleaned and containerized variant of VINS-Fusion built around ROS Noetic.
+The intended workflow is:
+
+1. Build the Docker image from [`docker/Dockerfile`](docker/Dockerfile).
+2. Enter the container with [`docker/run.sh`](docker/run.sh).
+3. Build and run the catkin workspace inside that container.
+
+The `run.sh` script is the supported development/runtime entrypoint. It mounts:
+
+- the persistent catkin workspace at `$HOME/.ws/vinsfusion` into `/root/catkin_ws`
+- this repository into `/root/catkin_ws/src/VINS-Fusion`
+- the dataset directory you pass as `$1` into `/datasets`
+
+That means your build artifacts persist across container runs, while the source tree stays live-mounted from this checkout.
+
+## Container Setup
+
+Build the image from the repository root:
+
+```bash
+docker build -t ros:vins-fusion -f docker/Dockerfile .
+```
+
+Then start the container and mount your dataset directory:
 
 ```bash
 ./run.sh /absolute/path/to/datasets
@@ -39,8 +63,23 @@ Notes:
 ## Build Inside The Container
 
 After `./run.sh` drops you into a shell inside the container:
+./run.sh /absolute/path/to/datasets
+```
+
+Notes:
+
+- Run `./run.sh` from the repository root. The script mounts `$(pwd)` into `/root/catkin_ws/src/VINS-Fusion`, so launching it from `docker/` or any other directory mounts the wrong path.
+- `run.sh` expects the dataset directory as its first argument and mounts it at `/datasets`.
+- The script enables X11 forwarding and GPU access, and assumes Docker can use `--runtime nvidia --gpus all`.
+- `/dev/video0` and `/dev/dri` are passed through as well.
+
+## Build Inside The Container
+
+After `./run.sh` drops you into a shell inside the container:
 
 ```bash
+cd /root/catkin_ws
+
 cd /root/catkin_ws
 
 catkin config \
@@ -82,13 +121,57 @@ Use this workflow for the EuRoC `MH_01_easy.bag` example.
 
 3. From the repository root, start the container and mount that directory as `/datasets`:
 
+catkin build
+source devel/setup.bash
+```
+
+This repo builds the following ROS executables:
+
+- `vins_node`
+- `loop_fusion_node`
+- `global_fusion_node`
+
+## Running MH_01 With `vins.launch`
+
+The main launch file is `launch/vins.launch`. It starts:
+
+- `vins_node`
+- `loop_fusion_node`
+- `rviz` by default
+- `rosbag play` for the bag passed via `bag_path`
+
+Use this workflow for the EuRoC `MH_01_easy.bag` example.
+
+1. Download the dataset from [EuRoC MAV Dataset](https://projects.asl.ethz.ch/datasets/).
+   Pick `MH_01` from the dataset list and make sure you have `MH_01_easy.bag` on the host.
+
+2. Put the bag in a host directory, for example:
+
 ```bash
+/home/your-user/euroc/MH_01_easy.bag
+```
+
+3. From the repository root, start the container and mount that directory as `/datasets`:
+
+```bash
+./run.sh /home/your-user/euroc
 ./run.sh /home/your-user/euroc
 ```
 
 4. Inside the container, build once if needed:
+4. Inside the container, build once if needed:
 
 ```bash
+cd /root/catkin_ws
+
+catkin config \
+    --env-cache \
+    --extend /opt/ros/noetic \
+    --cmake-args \
+    -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+    -DCMAKE_BUILD_TYPE=Release
+
+catkin build
 cd /root/catkin_ws
 
 catkin config \
@@ -111,11 +194,21 @@ Create the directories once:
 ```bash
 cd /root/catkin_ws/src/VINS-Fusion
 mkdir -p output/pose_graph
+cd /root/catkin_ws/src/VINS-Fusion
+mkdir -p output/pose_graph
 ```
 
 6. Run `MH_01_easy.bag` with the mono+IMU EuRoC config:
 
+6. Run `MH_01_easy.bag` with the mono+IMU EuRoC config:
+
 ```bash
+cd /root/catkin_ws
+source devel/setup.bash
+
+roslaunch vins vins.launch \
+    bag_path:=/datasets/MH_01_easy.bag \
+    config_path:=/root/catkin_ws/src/VINS-Fusion/config/euroc/euroc_mono_imu_config.yaml
 cd /root/catkin_ws
 source devel/setup.bash
 
